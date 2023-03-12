@@ -52,7 +52,7 @@ for jpeg_file in jpeg_files:
 
     im = ax_array[0, 0].imshow(rgb_image)
 
-    im = ax_array[0, 1].imshow(modified_labels, cmap = 'cividis', vmin = 0, vmax = 1)
+    im = ax_array[0, 1].imshow(modified_labels, cmap = 'binary', vmin = 0, vmax = 1)
 
     ax_array[0, 0].set_title('Original Image')
     ax_array[0, 1].set_title('Segmented Image, N= ' + str(len(more_info['points'])))
