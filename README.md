@@ -26,6 +26,8 @@
 
 ![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/32_result.png)
 
+![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/33_result.png)
+
 
 #### References:
 
