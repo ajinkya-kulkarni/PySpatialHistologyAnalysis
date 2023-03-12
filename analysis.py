@@ -22,7 +22,7 @@ from modules import *
 os.system('cls || clear')
 
 # Glob all the JPEG files in the directory
-jpeg_files = glob.glob("*.jpeg")
+jpeg_files = glob.glob("Test_Files/*.jpeg")
 
 # Loop over the JPEG files
 
