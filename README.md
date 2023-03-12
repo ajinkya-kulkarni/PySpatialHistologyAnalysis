@@ -1,4 +1,4 @@
-# WSI-slide-segmentation using StarDist and Python
+## WSI-slide-segmentation using StarDist and Python
 
 ![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/1_result.png)
 
