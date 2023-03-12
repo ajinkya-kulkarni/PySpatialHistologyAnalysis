@@ -20,6 +20,13 @@
 
 ![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/28_result.png)
 
+![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/30_result.png)
+
+![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/31_result.png)
+
+![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/32_result.png)
+
+
 #### References:
 
 1. All images taken from [Link 1](https://twitter.com/JMGardnerMD) and [Link 2](https://twitter.com/kiko4docs)
