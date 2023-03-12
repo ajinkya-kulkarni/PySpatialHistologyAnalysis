@@ -1,4 +1,4 @@
-## WSI-slide-segmentation
+## WSI-slide-segmentation using StarDist
 
 ![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/1_result.png)
 
