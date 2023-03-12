@@ -25,6 +25,8 @@ import os
 import skimage
 from tqdm.notebook import tqdm
 
+from PIL import Image
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from stardist.models import StarDist2D
@@ -77,4 +79,3 @@ def make_analysis(filename, grayscale=True, hsv=True):
 	return rgb_image, labels, more_info, rendered_labels
 
 ##########################################################################
-
