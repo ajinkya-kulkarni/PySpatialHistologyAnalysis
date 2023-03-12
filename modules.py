@@ -77,3 +77,4 @@ def make_analysis(filename, grayscale=True, hsv=True):
 	return rgb_image, labels, more_info, rendered_labels
 
 ##########################################################################
+

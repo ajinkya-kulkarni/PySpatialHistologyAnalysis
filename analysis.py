@@ -1,9 +1,13 @@
+import os
+os.system('cls || clear')
+
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 8})
 
 import numpy as np
 import glob
-import os
+
+import cv2
 
 import sys
 # Don't generate the __pycache__ folder locally
@@ -36,7 +40,15 @@ for jpeg_file in jpeg_files:
     
     ############################################################
 
-    fig = plt.figure(figsize = (5, 5), constrained_layout = True)
+    # new_size = (800, 800)  # example size
+
+    # resized_modified_labels = cv2.resize(modified_labels, new_size, interpolation=cv2.INTER_NEAREST)
+
+    # resized_rgb_image = cv2.resize(rgb_image, new_size)
+
+############################################################
+
+    fig = plt.figure(figsize = (8, 4), constrained_layout = True)
 
     ax_array = fig.subplots(1, 2, squeeze = False)
 
@@ -64,7 +76,7 @@ for jpeg_file in jpeg_files:
         
     ############################################################
 
-    plt.savefig(result_filename, dpi = 200)
+    plt.savefig(result_filename, dpi = 300, bbox_inches='tight')
     
     plt.close()
     
