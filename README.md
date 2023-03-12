@@ -11,3 +11,7 @@
 ![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/10_result.png)
 
 ![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/15_result.png)
+
+![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/20_result.png)
+
+![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/23_result.png)
