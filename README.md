@@ -4,9 +4,11 @@
 
 #### App Overview
 
+This is a web application for analyzing H&E images using the PySpatialAnalysis package and [StarDist](https://github.com/stardist/stardist). The app allows the user to upload an H&E image, and it performs object (nuclei) detection on the image using the StarDist2D model. The detected objects are then highlighted and displayed alongside the original image.
+
 ![Streamlit App Screenshot](https://github.com/ajinkya-kulkarni/PySpatialAnalysis/blob/main/screenshot.png)
 
-This is a web application for analyzing H&E images using the PySpatialAnalysis package and [StarDist](https://github.com/stardist/stardist). The app allows the user to upload an H&E image, and it performs object (nuclei) detection on the image using the StarDist2D model. The detected objects are then highlighted and displayed alongside the original image.
+#### Dependencies
 
 The app is built using the Streamlit framework and requires the following dependencies:
 - streamlit
@@ -14,6 +16,9 @@ The app is built using the Streamlit framework and requires the following depend
 - numpy
 - BytesIO
 - modules (custom module for the app)
+
+
+#### Using the app
 
 To run the app, navigate to the directory containing the code and run the following command:
 `streamlit run PySpatialAnalysis_StreamlitApp.py`
