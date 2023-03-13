@@ -20,62 +20,36 @@
 
 ##########################################################################
 
-import cv2
-import os
-import skimage
-from tqdm.notebook import tqdm
-
 from PIL import Image
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-from stardist.models import StarDist2D
-from stardist.plot import render_label
-from csbdeep.utils import normalize
+import numpy as np
 
 ##########################################################################
 
-def make_analysis(filename, grayscale=True, hsv=True):
+def read_image(filename):
 
-	# Check if file exists
-	if not os.path.isfile(filename):
-		raise FileNotFoundError(f"File not found: {filename}")
+	# Load the image using Pillow and convert to 8 bit
+	img = Image.open(filename)
 
-	rgb_image = skimage.io.imread(filename, as_gray=False)
+	rgb_image = img.convert('RGB')
+
+	# Convert the image to a numpy array
+	rgb_image = np.array(rgb_image)
+
+	return rgb_image
+
+##########################################################################
+
+def resize_image_by_width(image_path, target_width):
 	
-	# Normalize pixel values to 0-255 range and convert to 8-bit unsigned integer array
-	rgb_image = cv2.normalize(rgb_image, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+	# Get original dimensions
+	height, width, _ = img.shape
 
-	# Check if the last dimension is 3 and not 4
-	if rgb_image.shape[-1] != 3:
-		raise Exception ('RGB image has the wrong dimenion(s)')
+	# Calculate scale factor to resize width to target_width
+	scale_factor = target_width / width
 
-	#########
+	# Resize image with calculated scale factor
+	resized_img = cv2.resize(img, (int(width * scale_factor), int(height * scale_factor)))
 
-	# Convert RGB color image to grayscale image
-	if grayscale:
-		gray_img = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-	else:
-		gray_img = None
-	
-	# Convert RGB color image to HSV color image
-	if hsv:
-		hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HSV)
-	else:
-		hsv_image = None
-
-	#########
-
-	# # prints a list of available models
-	# StarDist2D.from_pretrained()
-
-	# creates a pretrained model
-	model = StarDist2D.from_pretrained('2D_versatile_he')
-
-	labels, more_info = model.predict_instances(normalize(rgb_image))
-
-	rendered_labels = render_label(labels)
-
-	return rgb_image, labels, more_info, rendered_labels
+	return resized_img
 
 ##########################################################################

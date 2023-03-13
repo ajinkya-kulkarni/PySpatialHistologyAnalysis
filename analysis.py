@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 8})
 import numpy as np
 import glob
-import cv2
 
 from stardist import relabel_image_stardist
 
