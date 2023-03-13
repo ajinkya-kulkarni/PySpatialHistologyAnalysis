@@ -23,18 +23,66 @@
 from PIL import Image
 import numpy as np
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+from contextlib import redirect_stdout
+
+from stardist.models import StarDist2D
+from stardist.plot import render_label
+from stardist import relabel_image_stardist
+from csbdeep.utils import normalize
+
 ##########################################################################
 
 def read_image(filename):
+	"""
+	Reads an image from a file and returns it as a NumPy array.
 
-	# Load the image using Pillow and convert to 8 bit
-	img = Image.open(filename)
+	Parameters:
+	filename (str): The path to the image file.
 
-	rgb_image = img.convert('RGB')
-
-	# Convert the image to a numpy array
-	rgb_image = np.array(rgb_image)
-
+	Returns:
+	numpy.ndarray: The image as a NumPy array.
+	"""
+	try:
+		img = Image.open(filename)
+		rgb_image = img.convert('RGB')
+		rgb_image = np.array(rgb_image)
+	except:
+		raise ValueError('Error reading image file')
+	
 	return rgb_image
+
+##########################################################################
+
+def perform_analysis(rgb_image, enhance_labels=True, number_of_rays=128):
+	"""
+	Performs object detection on an RGB image using the StarDist2D model.
+
+	Parameters:
+	rgb_image (numpy.ndarray): An RGB image as a NumPy array.
+	enhance_labels (bool, optional): Whether to enhance the labels by adding rays (default is True).
+	number_of_rays (int, optional): The number of rays to add if enhance_labels is True (default is 128).
+
+	Returns:
+	numpy.ndarray: The labeled image as a NumPy array.
+	"""
+	try:
+		with redirect_stdout(open(os.devnull, "w")) as f:
+			model = StarDist2D.from_pretrained('2D_versatile_he')
+			labels, more_info = model.predict_instances(normalize(rgb_image))
+
+			rendered_labels = render_label(labels)
+
+		if enhance_labels:
+			relabelled_image = relabel_image_stardist(labels, n_rays=number_of_rays)
+		else:
+			relabelled_image = relabel_image_stardist(labels, n_rays=32)
+
+	except:
+		raise ValueError('Error predicting instances using StarDist2D model')
+
+	return relabelled_image
 
 ##########################################################################

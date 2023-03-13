@@ -25,21 +25,7 @@
 import streamlit as st
 from streamlit_image_comparison import image_comparison
 
-import matplotlib.pyplot as plt
 from PIL import Image
-import cv2
-
-import time
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-from contextlib import redirect_stdout
-
-from stardist.models import StarDist2D
-from stardist.plot import render_label
-from stardist import relabel_image_stardist
-from csbdeep.utils import normalize
-
 import numpy as np
 from io import BytesIO
 
@@ -74,7 +60,7 @@ st.markdown("")
 
 with st.form(key = 'form1', clear_on_submit = True):
 
-	st.markdown(':blue[Upload an H&E image to be analyzed.]')
+	st.markdown(':blue[Upload an H&E image to be analyzed. Works best for images less than 1000x1000 pixels ]')
 
 	uploaded_file = st.file_uploader("Upload a file", type=["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
 
@@ -97,22 +83,22 @@ with st.form(key = 'form1', clear_on_submit = True):
 		try:
 
 			rgb_image = read_image(uploaded_file)
-
-			with redirect_stdout(open(os.devnull, "w")) as f:
-				# reads the H&E pretrained model
-				model = StarDist2D.from_pretrained('2D_versatile_he')
-				labels, more_info = model.predict_instances(normalize(rgb_image), predict_kwargs = dict(verbose = False))
-
-			rendered_labels = render_label(labels)
-
-			relabelled_image = relabel_image_stardist(labels, n_rays = 128)
+			relabelled_image = perform_analysis(rgb_image)
 			modified_labels = np.where(relabelled_image > 0, 255, relabelled_image)
 
-			modified_labels_rgb_image = np.empty((*modified_labels.shape, 3), dtype=np.uint8)
-			# Set the values of the RGB channels to the grayscale values
-			modified_labels_rgb_image[:, :, 0] = 255 - modified_labels
-			modified_labels_rgb_image[:, :, 1] = 255 - modified_labels
-			modified_labels_rgb_image[:, :, 2] = 255 - modified_labels
+			# Convert grayscale image to RGB image
+			modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
+			# modified_labels_rgb_image[:, :, 0] = 255 - modified_labels
+			# modified_labels_rgb_image[:, :, 1] = 255 - modified_labels
+			# modified_labels_rgb_image[:, :, 2] = 255 - modified_labels
+
+			# Replace black pixels with "tab:blue"
+			black_pixels = np.where(modified_labels == 255)
+			modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
+
+			# Replace white pixels with "cosmic latte"
+			white_pixels = np.where(modified_labels == 0)
+			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
 
 			image_comparison(
 			img1 = rgb_image,
