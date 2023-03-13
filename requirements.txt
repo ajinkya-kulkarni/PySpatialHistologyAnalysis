@@ -1,5 +1,5 @@
-streamlit==1.17.0
 click==8.0.4
+streamlit==1.17.0
 streamlit_image_comparison==0.0.3
 numpy==1.24.2
 Pillow==9.4.0
