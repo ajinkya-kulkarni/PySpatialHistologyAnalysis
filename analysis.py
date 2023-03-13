@@ -7,6 +7,8 @@ import numpy as np
 import glob
 import cv2
 
+from stardist import relabel_image_stardist
+
 import sys
 # Don't generate the __pycache__ folder locally
 sys.dont_write_bytecode = True 
@@ -19,10 +21,8 @@ from modules import *
 
 ##################################################################################
 
-os.system('cls || clear')
-
 # Glob all the JPEG files in the directory
-jpeg_files = glob.glob("Test_Files/*.jpeg")
+jpeg_files = sorted(glob.glob("Test_Files/*.jpeg"))
 
 # Loop over the JPEG files
 
@@ -34,7 +34,9 @@ for jpeg_file in jpeg_files:
     
     ############################################################
 
-    modified_labels = np.where(labels > 0, 1, labels)
+    relabelled_image = relabel_image_stardist(labels, n_rays = 128)
+
+    modified_labels = np.where(relabelled_image > 0, 1, relabelled_image)
     
     ############################################################
 
