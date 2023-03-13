@@ -18,9 +18,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-# UX/UI recommendations provided by Radhika Bhagwat (radhika.bhagwat3@gmail.com, Product Designer)
-
-########################################################################################
+##########################################################################
 
 import streamlit as st
 from streamlit_image_comparison import image_comparison
