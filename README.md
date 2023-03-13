@@ -2,7 +2,7 @@
 
 ## Demonstrating PySpatialAnalysis using [StarDist](https://github.com/stardist/stardist)
 
-## App Overview
+#### App Overview
 
 ![Streamlit App Screenshot](https://github.com/ajinkya-kulkarni/PySpatialAnalysis/blob/main/screenshot.png)
 
