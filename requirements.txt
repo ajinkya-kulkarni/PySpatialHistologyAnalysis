@@ -1,4 +1,6 @@
+click==8.0.4
 streamlit_image_comparison==0.0.3
+protobuf<3.20,>=3.9.2
 numpy==1.24.2
 Pillow==9.4.0
 scikit-learn==1.2.1
