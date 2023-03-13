@@ -36,16 +36,8 @@ for jpeg_file in jpeg_files:
     relabelled_image = relabel_image_stardist(labels, n_rays = 128)
 
     modified_labels = np.where(relabelled_image > 0, 1, relabelled_image)
-    
+
     ############################################################
-
-    # new_size = (800, 800)  # example size
-
-    # resized_modified_labels = cv2.resize(modified_labels, new_size, interpolation=cv2.INTER_NEAREST)
-
-    # resized_rgb_image = cv2.resize(rgb_image, new_size)
-
-############################################################
 
     fig = plt.figure(figsize = (8, 4), constrained_layout = True)
 

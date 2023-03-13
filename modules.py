@@ -38,18 +38,3 @@ def read_image(filename):
 	return rgb_image
 
 ##########################################################################
-
-def resize_image_by_width(image_path, target_width):
-	
-	# Get original dimensions
-	height, width, _ = img.shape
-
-	# Calculate scale factor to resize width to target_width
-	scale_factor = target_width / width
-
-	# Resize image with calculated scale factor
-	resized_img = cv2.resize(img, (int(width * scale_factor), int(height * scale_factor)))
-
-	return resized_img
-
-##########################################################################

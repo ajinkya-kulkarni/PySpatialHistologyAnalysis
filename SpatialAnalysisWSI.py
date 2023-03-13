@@ -33,6 +33,8 @@ import time
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+from contextlib import redirect_stdout
+
 from stardist.models import StarDist2D
 from stardist.plot import render_label
 from stardist import relabel_image_stardist
@@ -96,9 +98,11 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 			rgb_image = read_image(uploaded_file)
 
-			# reads the H&E pretrained model
-			model = StarDist2D.from_pretrained('2D_versatile_he')
-			labels, more_info = model.predict_instances(normalize(rgb_image))
+			with redirect_stdout(open(os.devnull, "w")) as f:
+				# reads the H&E pretrained model
+				model = StarDist2D.from_pretrained('2D_versatile_he')
+				labels, more_info = model.predict_instances(normalize(rgb_image), predict_kwargs = dict(verbose = False))
+
 			rendered_labels = render_label(labels)
 
 			relabelled_image = relabel_image_stardist(labels, n_rays = 128)
@@ -110,17 +114,13 @@ with st.form(key = 'form1', clear_on_submit = True):
 			modified_labels_rgb_image[:, :, 1] = 255 - modified_labels
 			modified_labels_rgb_image[:, :, 2] = 255 - modified_labels
 
-			# modified_labels_rgb_image = resize_image_by_width(modified_labels_rgb_image, 670)
-			# rgb_image = resize_image_by_width(rgb_image, 670)
-
-			# modified_labels_rgb_image = np.stack((modified_labels,)*3, axis=-1)
-
 			image_comparison(
 			img1 = rgb_image,
 			img2 = modified_labels_rgb_image,
-			label1="H&E Image",
-			label2="Segmented H&E Image",
-			width = 672
+			label1="Image",
+			label2="Result",
+			width = 674,
+			in_memory = True, show_labels = True, make_responsive = True
 			)
 
 		except:
