@@ -1,31 +1,32 @@
-## WSI-slide-segmentation using [StarDist](https://github.com/stardist/stardist) and Python
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/1_result.png)
+## Demonstrating PySpatialAnalysis using [StarDist](https://github.com/stardist/stardist)
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/5_result.png)
+## App Overview
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/8_result.png)
+<!-- ![Streamlit App Screenshot](https://github.com/ajinkya-kulkarni/PyTextureAnalysis/blob/main/screenshot.png) -->
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/9_result.png)
+This is a web application for analyzing H&E images using PySpatialAnalysisWSI and [StarDist](https://github.com/stardist/stardist). The app allows the user to upload an H&E image, and it performs object (nuclei) detection on the image using the StarDist2D model. The detected objects are then highlighted and displayed alongside the original image.
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/10_result.png)
+The app is built using the Streamlit framework and requires the following dependencies:
+- streamlit
+- PIL
+- numpy
+- BytesIO
+- modules (custom module for the app)
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/15_result.png)
+To run the app, navigate to the directory containing the code and run the following command:
+`streamlit run PySpatialAnalysis_StreamlitApp.py`
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/18_result.png)
+Upon running the command, the app will open in your browser at `localhost:8501`.
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/23_result.png)
+To use the app, simply upload an H&E image using the file upload widget and click the "Analyze" button. The app will then perform object detection on the image using the StarDist2D model and display the results alongside the original image.
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/25_result.png)
+If an error occurs during image analysis, an error message will be displayed.
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/28_result.png)
+Note that the app works best for images smaller than 1000x1000 pixels.
 
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/30_result.png)
-
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/31_result.png)
-
-![](https://github.com/ajinkya-kulkarni/WSI-slide-segmentation/blob/main/Test_Files/33_result.png)
-
+Enjoy using PySpatialAnalysisWSI and StarDist web app!
 
 #### References:
 

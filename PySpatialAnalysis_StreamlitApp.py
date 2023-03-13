@@ -33,11 +33,11 @@ sys.dont_write_bytecode = True
 # Print exception without the buit-in python warning
 sys.tracebacklimit = 0 
 
-########################################################################################
+##########################################################################
 
 from modules import *
 
-########################################################################################
+##########################################################################
 
 with open("logo.jpg", "rb") as f:
 	image_data = f.read()
@@ -46,7 +46,7 @@ image_bytes = BytesIO(image_data)
 
 st.set_page_config(page_title = 'PySpatialAnalysis', page_icon = image_bytes, layout = "centered", initial_sidebar_state = "expanded", menu_items = {'Get help': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'Report a bug': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'About': 'This is a application for demonstrating the PySpatialAnalysis package. Developed, tested and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen'})
 
-########################################################################################
+##########################################################################
 
 # Title of the web app
 
@@ -54,27 +54,26 @@ st.title(':blue[Spatial analysis of H&E images using PySpatialAnalysisWSI using 
 
 st.markdown("")
 
-########################################################################################
+##########################################################################
 
 with st.form(key = 'form1', clear_on_submit = True):
 
-	st.markdown(':blue[Upload an H&E image to be analyzed. Works best for images less than 1000x1000 pixels ]')
+	st.markdown(':blue[Upload an H&E image to be analyzed. Works best for images smaller than 1000x1000 pixels ]')
 
 	uploaded_file = st.file_uploader("Upload a file", type=["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
 
-	####################################################################################
+	######################################################################
 
 	submitted = st.form_submit_button('Analyze')
 
-	st.markdown("")
-	st.markdown("")
+	st.markdown("""---""")
 	
-	####################################################################################
+	######################################################################
 
 	if uploaded_file is None:
 		st.stop()
 
-	####################################################################################
+	######################################################################
 
 	if submitted:
 
@@ -112,8 +111,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 			ErrorMessage = st.error('Error with analyzing the image', icon = None)
 			st.stop()
 
-		################################################################################
+		######################################################################
 
 		st.stop()
 
-################################################################################
+##########################################################################
