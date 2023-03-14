@@ -29,8 +29,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from contextlib import redirect_stdout
 
 from stardist.models import StarDist2D
-from stardist.plot import render_label
-from stardist import relabel_image_stardist
 from csbdeep.utils import normalize
 
 ##########################################################################
@@ -72,13 +70,9 @@ def perform_analysis(rgb_image, number_of_rays=32):
 			model = StarDist2D.from_pretrained('2D_versatile_he')
 			labels, more_info = model.predict_instances(normalize(rgb_image))
 
-			rendered_labels = render_label(labels)
-			
-			relabelled_image = relabel_image_stardist(labels, n_rays)
-
 	except:
 		raise ValueError('Error predicting instances using StarDist2D model')
 
-	return relabelled_image
+	return labels
 
 ##########################################################################
