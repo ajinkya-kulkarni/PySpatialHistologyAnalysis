@@ -174,7 +174,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 			fig, ax = plt.subplots()
 			# Overlay the labels image and KDE heatmap
 			im = ax.imshow(modified_labels_rgb_image)
-			im_heatmap = ax.imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm_r', vmin = 0, vmax = 1, alpha=0.7)
+			im_heatmap = ax.imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.7)
 			# Add a colorbar
 			divider = make_axes_locatable(ax)
 			cax = divider.append_axes("right", size="3%", pad=0.07)
@@ -187,7 +187,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		with right_column1:
 			fig, ax = plt.subplots()
-			im = ax.imshow(cluster_labels, cmap='cividis')
+			im = ax.imshow(cluster_labels, cmap='viridis')
 			# Add a colorbar
 			divider = make_axes_locatable(ax)
 			cax = divider.append_axes("right", size="3%", pad=0.07)
