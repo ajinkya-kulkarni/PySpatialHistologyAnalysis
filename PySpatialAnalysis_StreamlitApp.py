@@ -56,7 +56,7 @@ st.markdown("")
 
 ##########################################################################
 
-with st.form(key = 'form1', clear_on_submit = True):
+with st.form(key = 'form1', clear_on_submit = False):
 
 	st.markdown(':blue[Upload an H&E image to be analyzed. Works best for images smaller than 1000x1000 pixels ]')
 
