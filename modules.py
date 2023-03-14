@@ -69,11 +69,11 @@ def perform_analysis(rgb_image):
 
 			model = StarDist2D.from_pretrained('2D_versatile_he')
 
-			labels, more_info = model.predict_instances(normalize(rgb_image))
+			labels, detailed_info = model.predict_instances(normalize(rgb_image))
 
 	except:
 		raise ValueError('Error predicting instances using StarDist2D model')
 
-	return labels
+	return labels, detailed_info
 
 ##########################################################################

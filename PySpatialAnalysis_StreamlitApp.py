@@ -83,7 +83,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 				rgb_image = read_image(uploaded_file)
 
-				labels = perform_analysis(rgb_image)
+				labels, detailed_info = perform_analysis(rgb_image)
 
 				modified_labels = np.where(labels > 0, 255, labels)
 
