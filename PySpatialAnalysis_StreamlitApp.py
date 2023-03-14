@@ -133,7 +133,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		##############################################################
 
 		# Compute the region properties
-		label_properties = measure.regionprops_table(labels, intensity_image = rgb_image, properties=('area', 'bbox', 'centroid', 'convex_area', 'eccentricity', 'equivalent_diameter', 'euler_number', 'extent', 'filled_area', 'label', 'major_axis_length', 'minor_axis_length', 'orientation', 'perimeter', 'solidity'))
+		label_properties = measure.regionprops_table(labels, intensity_image = rgb_image, properties=('area', 'centroid', 'eccentricity', 'equivalent_diameter','label', 'orientation', 'perimeter'))
 
 		# Create a Pandas DataFrame
 		dataframe = pd.DataFrame(label_properties)
@@ -204,7 +204,10 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		st.markdown("Detailed Report")
 
-		st.dataframe(dataframe.style.format("{:.2f}"), use_container_width = True)
+		# Rename some columns
+		dataframe_renamed = dataframe.rename(columns={'area': 'Region Area', 'centroid': 'Region Centroid', 'eccentricity':'Eccentricity', 'equivalent_diameter':'Equivalent Diameter','orientation':'Orientation', 'label':'Label #'})
+
+		st.dataframe(dataframe_renamed.style.format("{:.2f}"), use_container_width = True)
 
 		##################################################################
 
