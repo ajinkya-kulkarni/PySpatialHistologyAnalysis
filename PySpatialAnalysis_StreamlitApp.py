@@ -44,10 +44,7 @@ with open("logo.jpg", "rb") as f:
 
 image_bytes = BytesIO(image_data)
 
-# which_layout = "centered"
-which_layout = "wide"
-
-st.set_page_config(page_title = 'PySpatialAnalysis', page_icon = image_bytes, layout = which_layout, initial_sidebar_state = "expanded", menu_items = {'Get help': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'Report a bug': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'About': 'This is a application for demonstrating the PySpatialAnalysis package. Developed, tested and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen'})
+st.set_page_config(page_title = 'PySpatialAnalysis', page_icon = image_bytes, layout = "centered", initial_sidebar_state = "expanded", menu_items = {'Get help': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'Report a bug': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'About': 'This is a application for demonstrating the PySpatialAnalysis package. Developed, tested and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen'})
 
 ##########################################################################
 
@@ -99,24 +96,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 			white_pixels = np.where(modified_labels == 0)
 			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
 			
-			if which_layout == "centered":
-				image_comparison(
-				img1 = rgb_image,
-				img2 = modified_labels_rgb_image,
-				label1="Image",
-				label2="Result",
-				width = 674,
-				in_memory = True, show_labels = True, make_responsive = True
-				)
-			if which_layout == "wide":
-				image_comparison(
-				img1 = rgb_image,
-				img2 = modified_labels_rgb_image,
-				label1="Image",
-				label2="Result",
-				width = 1169,
-				in_memory = True, show_labels = True, make_responsive = True
-				)
+			image_comparison(img1 = rgb_image, img2 = modified_labels_rgb_image, label1="Image", label2="Result", width = 674, in_memory = True, show_labels = True, make_responsive = True)
 
 		except:
 
