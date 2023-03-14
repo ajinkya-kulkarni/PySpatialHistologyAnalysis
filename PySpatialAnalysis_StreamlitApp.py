@@ -78,7 +78,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 		try:
 
 			rgb_image = read_image(uploaded_file)
-			relabelled_image = perform_analysis(rgb_image)
+
+			relabelled_image = perform_analysis(rgb_image, number_of_rays = 128)
+
 			modified_labels = np.where(relabelled_image > 0, 255, relabelled_image)
 
 			# Convert grayscale image to RGB image

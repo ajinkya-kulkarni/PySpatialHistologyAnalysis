@@ -56,14 +56,13 @@ def read_image(filename):
 
 ##########################################################################
 
-def perform_analysis(rgb_image, enhance_labels=True, number_of_rays=128):
+def perform_analysis(rgb_image, number_of_rays=32):
 	"""
 	Performs object detection on an RGB image using the StarDist2D model.
 
 	Parameters:
 	rgb_image (numpy.ndarray): An RGB image as a NumPy array.
-	enhance_labels (bool, optional): Whether to enhance the labels by adding rays (default is True).
-	number_of_rays (int, optional): The number of rays to add if enhance_labels is True (default is 128).
+	number_of_rays (int, optional): The number of rays to add (default is 32).
 
 	Returns:
 	numpy.ndarray: The labeled image as a NumPy array.
@@ -74,11 +73,8 @@ def perform_analysis(rgb_image, enhance_labels=True, number_of_rays=128):
 			labels, more_info = model.predict_instances(normalize(rgb_image))
 
 			rendered_labels = render_label(labels)
-
-		if enhance_labels:
-			relabelled_image = relabel_image_stardist(labels, n_rays=number_of_rays)
-		else:
-			relabelled_image = relabel_image_stardist(labels, n_rays=32)
+			
+			relabelled_image = relabel_image_stardist(labels, n_rays)
 
 	except:
 		raise ValueError('Error predicting instances using StarDist2D model')
