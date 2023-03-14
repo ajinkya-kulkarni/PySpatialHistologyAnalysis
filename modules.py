@@ -54,13 +54,12 @@ def read_image(filename):
 
 ##########################################################################
 
-def perform_analysis(rgb_image, number_of_rays=32):
+def perform_analysis(rgb_image):
 	"""
 	Performs object detection on an RGB image using the StarDist2D model.
 
 	Parameters:
 	rgb_image (numpy.ndarray): An RGB image as a NumPy array.
-	number_of_rays (int, optional): The number of rays to add (default is 32).
 
 	Returns:
 	numpy.ndarray: The labeled image as a NumPy array.
