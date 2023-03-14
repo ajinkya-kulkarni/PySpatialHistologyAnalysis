@@ -79,22 +79,24 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		try:
 
-			rgb_image = read_image(uploaded_file)
+			with st.spinner('Analyzing uploaded image...'):
 
-			labels = perform_analysis(rgb_image)
+				rgb_image = read_image(uploaded_file)
 
-			modified_labels = np.where(labels > 0, 255, labels)
+				labels = perform_analysis(rgb_image)
 
-			# Convert grayscale image to RGB image
-			modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
+				modified_labels = np.where(labels > 0, 255, labels)
 
-			# Replace black pixels with "tab:blue"
-			black_pixels = np.where(modified_labels == 255)
-			modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
+				# Convert grayscale image to RGB image
+				modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
 
-			# Replace white pixels with custom RGB color
-			white_pixels = np.where(modified_labels == 0)
-			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
+				# Replace black pixels with "tab:blue"
+				black_pixels = np.where(modified_labels == 255)
+				modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
+
+				# Replace white pixels with custom RGB color
+				white_pixels = np.where(modified_labels == 0)
+				modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
 			
 			image_comparison(img1 = rgb_image, img2 = modified_labels_rgb_image, label1="Image", label2="Result", width = 674, in_memory = True, show_labels = True, make_responsive = True)
 
