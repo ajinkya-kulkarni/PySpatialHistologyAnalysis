@@ -99,7 +99,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 			white_pixels = np.where(modified_labels == 0)
 			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
 			
-			if which_layout == "centered:
+			if which_layout == "centered":
 				image_comparison(
 				img1 = rgb_image,
 				img2 = modified_labels_rgb_image,
@@ -108,7 +108,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 				width = 674,
 				in_memory = True, show_labels = True, make_responsive = True
 				)
-			if which_layout == "wide:
+			if which_layout == "wide":
 				image_comparison(
 				img1 = rgb_image,
 				img2 = modified_labels_rgb_image,
