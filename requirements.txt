@@ -1,5 +1,6 @@
 streamlit
 numpy
+protobuf<3.20,>=3.9.2
 tensorflow-cpu
 Pillow
 stardist
