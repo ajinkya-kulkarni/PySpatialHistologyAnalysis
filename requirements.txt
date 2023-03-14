@@ -3,3 +3,8 @@ numpy
 tensorflow-cpu
 Pillow
 stardist
+scipy
+pandas
+matplotlib
+skimage
+scikit-learn

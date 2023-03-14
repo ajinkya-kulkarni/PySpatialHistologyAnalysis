@@ -26,6 +26,13 @@ from PIL import Image
 import numpy as np
 from io import BytesIO
 
+from skimage import measure
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import ListedColormap
+
 import sys
 # Don't generate the __pycache__ folder locally
 sys.dont_write_bytecode = True 
@@ -35,7 +42,12 @@ sys.tracebacklimit = 0
 ##########################################################################
 
 from modules import *
-from compare_images import *
+
+from compare_images import read_image_as_pil
+from compare_images import pillow_to_base64
+from compare_images import local_file_to_base64
+from compare_images import pillow_local_file_to_base64
+from compare_images import image_comparison
 
 ##########################################################################
 
@@ -77,35 +89,124 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	if submitted:
 
-		try:
+		with st.spinner('Analyzing uploaded image...'):
 
-			with st.spinner('Analyzing uploaded image...'):
+			rgb_image = read_image(uploaded_file)
 
-				rgb_image = read_image(uploaded_file)
+			##########################################################
 
-				labels, detailed_info = perform_analysis(rgb_image)
+			labels, detailed_info = perform_analysis(rgb_image)
 
-				modified_labels = np.where(labels > 0, 255, labels)
+			##########################################################
 
-				# Convert grayscale image to RGB image
-				modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
+			modified_labels = np.where(labels > 0, 255, labels)
 
-				# Replace black pixels with "tab:blue"
-				black_pixels = np.where(modified_labels == 255)
-				modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
+			##########################################################
 
-				# Replace white pixels with custom RGB color
-				white_pixels = np.where(modified_labels == 0)
-				modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
-			
-			image_comparison(img1 = rgb_image, img2 = modified_labels_rgb_image, label1="Uploaded image", label2="Result", width = 674, in_memory = True, show_labels = True, make_responsive = True)
+			# st.write(detailed_info)
 
-		except:
+			# Convert grayscale image to RGB image
+			modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
 
-			ErrorMessage = st.error('Error with analyzing the image', icon = None)
-			st.stop()
+			##########################################################
 
-		######################################################################
+			# Replace black pixels with "tab:blue"
+			black_pixels = np.where(modified_labels == 255)
+			modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
+
+			# Replace white pixels with custom RGB color
+			white_pixels = np.where(modified_labels == 0)
+			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
+
+		##############################################################
+
+		# Check that each label is a unique integer
+		unique_labels = np.unique(labels)
+		num_labels = len(unique_labels) - 1  # subtract 1 to exclude background label
+		if num_labels != labels.max():
+			raise Exception ('Each blob does not have a unique integer assigned to it.')
+
+		##############################################################
+		
+		image_comparison(img1 = rgb_image, img2 = modified_labels_rgb_image, label1="Uploaded image", label2="Result", width = 674, in_memory = True, show_labels = True, make_responsive = True)
+
+		##############################################################
+
+		# Compute the region properties
+		label_properties = measure.regionprops_table(labels, intensity_image = rgb_image, properties=('area', 'bbox', 'centroid', 'convex_area', 'eccentricity', 'equivalent_diameter', 'euler_number', 'extent', 'filled_area', 'label', 'major_axis_length', 'minor_axis_length', 'orientation', 'perimeter', 'solidity'))
+
+		# Create a Pandas DataFrame
+		dataframe = pd.DataFrame(label_properties)
+
+		##############################################################
+
+		centroids = list(zip(dataframe['centroid-0'], dataframe['centroid-1']))
+
+		centroids = np.asarray(centroids)
+
+		##############################################################
+
+		st.markdown("")
+
+		# Compute KDE heatmap
+		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 5)
+
+		##################################################################
+
+		st.markdown("")
+
+		##################################################################
+
+		eccentricity_list = list(dataframe['eccentricity'])
+		eccentricity_list = np.atleast_2d(np.asarray(eccentricity_list))
+
+		cluster_number = 4
+
+		# Cluster the labels by eccentricity
+		cluster_labels = cluster_labels_by_eccentricity(eccentricity_list, labels, n_clusters=cluster_number)
+
+		##################################################################
+
+		left_column1, right_column1  = st.columns(2)
+
+		with left_column1:
+			# Create the figure and axis objects
+			fig, ax = plt.subplots()
+			# Overlay the labels image and KDE heatmap
+			im = ax.imshow(modified_labels_rgb_image)
+			im_heatmap = ax.imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm_r', vmin = 0, vmax = 1, alpha=0.7)
+			# Add a colorbar
+			divider = make_axes_locatable(ax)
+			cax = divider.append_axes("right", size="3%", pad=0.07)
+			fig.colorbar(im_heatmap, cax=cax)
+			ax.set_title('Kernel Density Estimate heatmap of Nuclei')
+			# Turn off axis ticks and labels
+			ax.set_xticks([])
+			ax.set_yticks([])
+			st.pyplot(fig)
+
+		with right_column1:
+			fig, ax = plt.subplots()
+			im = ax.imshow(cluster_labels, cmap='cividis')
+			# Add a colorbar
+			divider = make_axes_locatable(ax)
+			cax = divider.append_axes("right", size="3%", pad=0.07)
+			fig.colorbar(im, cax=cax)
+			ax.set_title('Clustered Blob Labels Colored by Eccentricity')
+			# Turn off axis ticks and labels
+			ax.set_xticks([])
+			ax.set_yticks([])
+			st.pyplot(fig)
+
+		##################################################################
+
+		st.markdown("")
+
+		st.markdown("Detailed Report")
+
+		st.dataframe(dataframe.style.format("{:.2f}"), use_container_width = True)
+
+		##################################################################
 
 		st.stop()
 
