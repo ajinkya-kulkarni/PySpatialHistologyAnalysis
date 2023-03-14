@@ -66,7 +66,9 @@ def perform_analysis(rgb_image):
 	"""
 	try:
 		with redirect_stdout(open(os.devnull, "w")) as f:
+
 			model = StarDist2D.from_pretrained('2D_versatile_he')
+
 			labels, more_info = model.predict_instances(normalize(rgb_image))
 
 	except:
