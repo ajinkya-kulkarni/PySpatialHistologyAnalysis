@@ -50,7 +50,7 @@ st.set_page_config(page_title = 'PySpatialAnalysis', page_icon = image_bytes, la
 
 # Title of the web app
 
-st.title(':blue[Spatial analysis of H&E images using PySpatialAnalysisWSI using StarDist]')
+st.title(':blue[Spatial analysis of H&E images using PySpatialAnalysis using StarDist]')
 
 st.markdown("")
 
@@ -65,6 +65,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 	######################################################################
 
 	submitted = st.form_submit_button('Analyze')
+
+	st.markdown("")
 	
 	######################################################################
 
