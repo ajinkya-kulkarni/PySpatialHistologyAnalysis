@@ -149,7 +149,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		st.markdown("")
 
 		# Compute KDE heatmap
-		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 5)
+		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 2)
 
 		##################################################################
 
@@ -160,7 +160,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		eccentricity_list = list(dataframe['eccentricity'])
 		eccentricity_list = np.atleast_2d(np.asarray(eccentricity_list))
 
-		cluster_number = 3
+		cluster_number = 4
 
 		# Cluster the labels by eccentricity
 		cluster_labels = cluster_labels_by_eccentricity(eccentricity_list, labels, n_clusters=cluster_number)
@@ -176,22 +176,25 @@ with st.form(key = 'form1', clear_on_submit = True):
 		# Add a colorbar
 		divider = make_axes_locatable(axs[0])
 		cax = divider.append_axes("right", size="3%", pad=0.07)
-		fig.colorbar(im_heatmap, cax=cax)
+		cb = fig.colorbar(im_heatmap, cax=cax)
+		cb.ax.set_yticklabels(["{:.1f}".format(i) for i in cb.get_ticks()]) # set ticks of your format
 		axs[0].set_title('Kernel Density Estimate heatmap of Nuclei')
 		# Turn off axis ticks and labels
 		axs[0].set_xticks([])
 		axs[0].set_yticks([])
 
 		# Overlay the clustered blob labels on the second subplot
-		im = axs[1].imshow(cluster_labels, cmap='viridis')
+		im = axs[1].imshow(cluster_labels, cmap='tab20c')
 		# Add a colorbar
 		divider = make_axes_locatable(axs[1])
 		cax = divider.append_axes("right", size="3%", pad=0.07)
-		fig.colorbar(im, cax=cax)
+		cb = fig.colorbar(im, cax=cax)
+		cb.ax.set_yticklabels([str(int(i)) for i in cb.get_ticks()]) # set ticks of your format
 		axs[1].set_title('Nuclei colored by Eccentricity')
 		# Turn off axis ticks and labels
 		axs[1].set_xticks([])
 		axs[1].set_yticks([])
+		cax.remove()
 
 		# Adjust the layout of the subplots
 		plt.tight_layout()
