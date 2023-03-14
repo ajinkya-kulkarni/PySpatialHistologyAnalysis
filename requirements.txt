@@ -1,6 +1,5 @@
 streamlit
-tensorflow-cpu
-streamlit_image_comparison
 numpy
+tensorflow-cpu
 Pillow
 stardist

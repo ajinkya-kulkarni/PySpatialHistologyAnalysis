@@ -21,7 +21,6 @@
 ##########################################################################
 
 import streamlit as st
-from streamlit_image_comparison import image_comparison
 
 from PIL import Image
 import numpy as np
@@ -36,6 +35,7 @@ sys.tracebacklimit = 0
 ##########################################################################
 
 from modules import *
+from compare_images import *
 
 ##########################################################################
 
