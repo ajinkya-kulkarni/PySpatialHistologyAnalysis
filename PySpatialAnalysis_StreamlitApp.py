@@ -160,43 +160,42 @@ with st.form(key = 'form1', clear_on_submit = True):
 		eccentricity_list = list(dataframe['eccentricity'])
 		eccentricity_list = np.atleast_2d(np.asarray(eccentricity_list))
 
-		cluster_number = 4
+		cluster_number = 3
 
 		# Cluster the labels by eccentricity
 		cluster_labels = cluster_labels_by_eccentricity(eccentricity_list, labels, n_clusters=cluster_number)
 
 		##################################################################
 
-		left_column1, right_column1  = st.columns(2)
+		# Create the figure and axis objects
+		fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
 
-		with left_column1:
-			# Create the figure and axis objects
-			fig, ax = plt.subplots()
-			# Overlay the labels image and KDE heatmap
-			im = ax.imshow(modified_labels_rgb_image)
-			im_heatmap = ax.imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.7)
-			# Add a colorbar
-			divider = make_axes_locatable(ax)
-			cax = divider.append_axes("right", size="3%", pad=0.07)
-			fig.colorbar(im_heatmap, cax=cax)
-			ax.set_title('Kernel Density Estimate heatmap of Nuclei')
-			# Turn off axis ticks and labels
-			ax.set_xticks([])
-			ax.set_yticks([])
-			st.pyplot(fig)
+		# Overlay the labels image and KDE heatmap on the first subplot
+		im = axs[0].imshow(modified_labels, cmap = 'binary')
+		im_heatmap = axs[0].imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.8)
+		# Add a colorbar
+		divider = make_axes_locatable(axs[0])
+		cax = divider.append_axes("right", size="3%", pad=0.07)
+		fig.colorbar(im_heatmap, cax=cax)
+		axs[0].set_title('Kernel Density Estimate heatmap of Nuclei')
+		# Turn off axis ticks and labels
+		axs[0].set_xticks([])
+		axs[0].set_yticks([])
 
-		with right_column1:
-			fig, ax = plt.subplots()
-			im = ax.imshow(cluster_labels, cmap='viridis')
-			# Add a colorbar
-			divider = make_axes_locatable(ax)
-			cax = divider.append_axes("right", size="3%", pad=0.07)
-			fig.colorbar(im, cax=cax)
-			ax.set_title('Clustered Blob Labels Colored by Eccentricity')
-			# Turn off axis ticks and labels
-			ax.set_xticks([])
-			ax.set_yticks([])
-			st.pyplot(fig)
+		# Overlay the clustered blob labels on the second subplot
+		im = axs[1].imshow(cluster_labels, cmap='viridis')
+		# Add a colorbar
+		divider = make_axes_locatable(axs[1])
+		cax = divider.append_axes("right", size="3%", pad=0.07)
+		fig.colorbar(im, cax=cax)
+		axs[1].set_title('Nuclei colored by Eccentricity')
+		# Turn off axis ticks and labels
+		axs[1].set_xticks([])
+		axs[1].set_yticks([])
+
+		# Adjust the layout of the subplots
+		plt.tight_layout()
+		st.pyplot(fig)
 
 		##################################################################
 
