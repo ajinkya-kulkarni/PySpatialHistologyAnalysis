@@ -6,5 +6,5 @@ stardist
 scipy
 pandas
 matplotlib
-skimage
+scikit-image
 scikit-learn
