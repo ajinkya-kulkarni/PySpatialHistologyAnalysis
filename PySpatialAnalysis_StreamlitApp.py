@@ -26,6 +26,8 @@ from PIL import Image
 import numpy as np
 from io import BytesIO
 
+import tensorflow as tf
+
 import sys
 # Don't generate the __pycache__ folder locally
 sys.dont_write_bytecode = True 
@@ -82,6 +84,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 			relabelled_image = perform_analysis(rgb_image)
 
 			modified_labels = np.where(relabelled_image > 0, 255, relabelled_image)
+
+			tf.reset_default_graph()
 
 			# Convert grayscale image to RGB image
 			modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
