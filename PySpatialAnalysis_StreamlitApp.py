@@ -160,14 +160,14 @@ with st.form(key = 'form1', clear_on_submit = True):
 			criterion_list = list(dataframe[criterion])
 			criterion_list = np.atleast_2d(np.asarray(criterion_list))
 
-			cluster_number = 4
+			cluster_number = 3
 
 			# Cluster the labels by criterion
 			cluster_labels = cluster_labels_by_criterion(criterion_list, labels, n_clusters=cluster_number)
 
 			##############################################################
 
-			figure = make_plots(rgb_image, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number)
+			figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number)
 
 			st.pyplot(figure)
 

@@ -144,7 +144,7 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_i
 
 ##########################################################################
 
-def make_plots(rgb_image, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, DPI = 300):
+def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, DPI = 300):
 
 	# Create the figure and axis objects
 	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8), dpi = DPI)
@@ -167,7 +167,7 @@ def make_plots(rgb_image, modified_labels_rgb_image, modified_labels, kde_heatma
 	divider = make_axes_locatable(axs[0, 1])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im, cax=cax)
-	axs[0, 1].set_title('Segmented Nuclei')
+	axs[0, 1].set_title('Segmented Nuclei, N=' + str(len(detailed_info['points'])))
 	# Turn off axis ticks and labels
 	axs[0, 1].set_xticks([])
 	axs[0, 1].set_yticks([])
