@@ -86,6 +86,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	if submitted:
 
+		st.markdown("""---""")
+
 		st.markdown("Results")
 
 		with st.spinner('Analyzing uploaded image...'):
@@ -129,6 +131,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 		
 		image_comparison(img1 = rgb_image, img2 = modified_labels_rgb_image, label1="Uploaded image", label2="Result", width = 674, in_memory = True, show_labels = True, make_responsive = True)
 
+		st.markdown("")
+
 		##############################################################
 
 		# Compute the region properties
@@ -144,8 +148,6 @@ with st.form(key = 'form1', clear_on_submit = True):
 		centroids = np.asarray(centroids)
 
 		##############################################################
-
-		st.markdown("""---""")
 
 		with st.spinner('Creating plots and report...'):
 

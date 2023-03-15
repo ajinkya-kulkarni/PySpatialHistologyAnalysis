@@ -116,7 +116,7 @@ def compute_kde_heatmap(centroids, label_image, subsample_factor):
 
 ##########################################################################
 
-def cluster_labels_by_criterion(criterion_list, label_image, n_clusters=3):
+def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_init = 20):
 	"""
 	Clusters the labels in a label image based on a criterion.
 
@@ -133,7 +133,7 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters=3):
 
 	# Perform KMeans clustering on the criterion values
 
-	kmeans = KMeans(n_clusters = n_clusters, n_init = 10).fit(criterion_list.reshape(-1, 1))
+	kmeans = KMeans(n_clusters = n_clusters, n_init = n_init).fit(criterion_list.reshape(-1, 1))
 
 	# Assign cluster labels to each label in the input image
 	cluster_labels = np.zeros_like(label_image)
