@@ -11,8 +11,6 @@ This is primarily a [web application](https://pyspatialhistologyinformation.stre
 
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialAnalysis/blob/main/screenshot2.png)
 
-![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialAnalysis/blob/main/screenshot3.png)
-
 #### Dependencies
 
 The app is built using the Streamlit framework and requires the following dependencies:
