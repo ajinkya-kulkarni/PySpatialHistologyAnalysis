@@ -40,12 +40,6 @@ sys.tracebacklimit = 0
 
 from modules import *
 
-from compare_images import read_image_as_pil
-from compare_images import pillow_to_base64
-from compare_images import local_file_to_base64
-from compare_images import pillow_local_file_to_base64
-from compare_images import image_comparison
-
 ##########################################################################
 
 with open("logo.jpg", "rb") as f:
