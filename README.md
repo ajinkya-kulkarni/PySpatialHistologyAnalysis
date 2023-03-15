@@ -1,5 +1,6 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pyspatialhistologyinformation.streamlit.app/)
+[![DOI](https://zenodo.org/badge/612892393.svg)](https://zenodo.org/badge/latestdoi/612892393)
 
 ## Demonstrating PySpatialHistologyAnalysis using [StarDist](https://github.com/stardist/stardist)
 
