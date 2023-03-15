@@ -22,6 +22,7 @@
 
 from PIL import Image
 import numpy as np
+import cv2
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -108,9 +109,9 @@ def compute_kde_heatmap(centroids, label_image, subsample_factor):
 	grid_coords = np.vstack([x.ravel(), y.ravel()])
 
 	# Evaluate kernel density estimate on grid
-	z = kde(grid_coords).reshape(shape)
+	kde_heatmap = kde(grid_coords).reshape(shape)
 
-	return z
+	return kde_heatmap
 
 ##########################################################################
 
@@ -119,9 +120,10 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_i
 	Clusters the labels in a label image based on a criterion.
 
 	Parameters:
+	criterion_list (numpy array): A 1D numpy array of criterion for each label in the image.
 	label_image (numpy array): A labeled image where each blob has a unique integer label.
-	criterion (numpy array): A 1D numpy array of criterion for each label in the image.
 	n_clusters (int): The number of clusters to use for KMeans clustering.
+	n_init (int): Number of time the k-means algorithm will be run with different centroid seeds.
 
 	Returns:
 	A numpy array representing the cluster labels evaluated on the input label image.
@@ -130,7 +132,6 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_i
 	criterion_list = criterion_list.ravel()
 
 	# Perform KMeans clustering on the criterion values
-
 	kmeans = KMeans(n_clusters = n_clusters, n_init = n_init).fit(criterion_list.reshape(-1, 1))
 
 	# Assign cluster labels to each label in the input image
@@ -142,10 +143,12 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_i
 
 ##########################################################################
 
-def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, DPI = 300):
+def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, title_PAD = 12, DPI = 300):
+
+	gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
 	# Create the figure and axis objects
-	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8), dpi = DPI)
+	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 9), dpi = DPI)
 
 	# Display uploaded image
 	im = axs[0, 0].imshow(rgb_image)
@@ -153,7 +156,7 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	divider = make_axes_locatable(axs[0, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im, cax=cax)
-	axs[0, 0].set_title('Uploaded Image')
+	axs[0, 0].set_title('Uploaded Image', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[0, 0].set_xticks([])
 	axs[0, 0].set_yticks([])
@@ -165,31 +168,31 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	divider = make_axes_locatable(axs[0, 1])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im, cax=cax)
-	axs[0, 1].set_title('Segmented Nuclei, N=' + str(len(detailed_info['points'])))
+	axs[0, 1].set_title('Segmented Nuclei, N=' + str(len(detailed_info['points'])), pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[0, 1].set_xticks([])
 	axs[0, 1].set_yticks([])
 	cax.remove()
 
-	# Overlay the labels image and KDE heatmap
-	im = axs[1, 0].imshow(modified_labels, cmap = 'binary', zorder = 1)
-	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='RdYlBu_r', vmin = 0, vmax = 1, alpha=0.8, zorder = 2)
+	# Overlay the grayscale image and KDE heatmap
+	im = axs[1, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
+	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.5, zorder = 2)
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_heatmap, cax=cax)
-	axs[1, 0].set_title('Nuclei Density')
+	axs[1, 0].set_title('Nuclei Density', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[1, 0].set_xticks([])
 	axs[1, 0].set_yticks([])
 
-	# Display the clustered blob labels
-	im = axs[1, 1].imshow(cluster_labels, cmap='viridis')
+	# Display the clustered blob labels figure
+	im_clusters = axs[1, 1].imshow(cluster_labels, alpha=0.8, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 1])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	cb = fig.colorbar(im, cax=cax)
-	axs[1, 1].set_title('Nuclei grouped into ' + str(cluster_number - 1) + ' classes by ' + criterion)
+	cb = fig.colorbar(im_clusters, cax=cax)
+	axs[1, 1].set_title('Nuclei grouped into ' + str(cluster_number - 1) + ' classes by ' + criterion, pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[1, 1].set_xticks([])
 	axs[1, 1].set_yticks([])

@@ -42,37 +42,61 @@ from modules import *
 
 ##########################################################################
 
+# Open the logo file in binary mode and read its contents into memory
 with open("logo.jpg", "rb") as f:
 	image_data = f.read()
 
+# Create a BytesIO object from the image data
 image_bytes = BytesIO(image_data)
 
-st.set_page_config(page_title = 'PySpatialHistologyAnalysis', page_icon = image_bytes, layout = "centered", initial_sidebar_state = "expanded", menu_items = {'Get help': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'Report a bug': 'mailto:ajinkya.kulkarni@mpinat.mpg.de', 'About': 'This is a application for demonstrating the PySpatialHistologyAnalysis package. Developed, tested and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen'})
+# Configure the page settings using the "set_page_config" method of Streamlit
+st.set_page_config(
+	page_title='PySpatialHistologyAnalysis',
+	page_icon=image_bytes,  # Use the logo image as the page icon
+	layout="centered",
+	initial_sidebar_state="expanded",
+	menu_items={
+		'Get help': 'mailto:ajinkya.kulkarni@mpinat.mpg.de',
+		'Report a bug': 'mailto:ajinkya.kulkarni@mpinat.mpg.de',
+		'About': 'This is an application for demonstrating the PySpatialHistologyAnalysis package. Developed, tested, and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen'
+	}
+)
 
 ##########################################################################
 
-# Title of the web app
-
+# Set the title of the web app
 st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis, PySAL and StarDist]')
 
+# Add some vertical space between the title and the next section
 st.markdown("")
 
 ##########################################################################
 
-with st.form(key = 'form1', clear_on_submit = True):
+# Create a form using the "form" method of Streamlit
+with st.form(key='form1', clear_on_submit=True):
 
-	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1000x1000 pixels ]')
+	# Add some text explaining what the user should do next
+	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1000x1000 pixels]')
 
-	uploaded_file = st.file_uploader("Upload a file", type=["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
+	# Add a file uploader to allow the user to upload an image file
+	uploaded_file = st.file_uploader(
+		"Upload a file",
+		type=["tif", "tiff", "png", "jpg", "jpeg"],
+		accept_multiple_files=False,
+		label_visibility='collapsed'
+	)
 
 	######################################################################
 
+	# Add a submit button to the form
 	submitted = st.form_submit_button('Analyze')
 
+	# Add some vertical space between the form and the next section
 	st.markdown("")
-	
+
 	######################################################################
 
+	# If no file was uploaded, stop processing and exit early
 	if uploaded_file is None:
 		st.stop()
 
@@ -86,30 +110,33 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		with st.spinner('Analyzing uploaded image...'):
 
+			# Read in the RGB image from an uploaded file
 			rgb_image = read_image(uploaded_file)
 
 			##########################################################
 
+			# Perform instance segmentation analysis on the RGB image to obtain the labels
+			# and detailed information about each label
 			labels, detailed_info = perform_analysis(rgb_image)
 
 			##########################################################
 
+			# Convert the label image to a binary image where non-zero pixels are set to 255
 			modified_labels = np.where(labels > 0, 255, labels)
 
 			##########################################################
 
-			# st.write(detailed_info)
-
-			# Convert grayscale image to RGB image
+			# Create an RGB image with the same dimensions as the modified label image
+			# with all pixels set to white
 			modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
 
 			##########################################################
 
-			# Replace black pixels with "tab:blue"
+			# Replace black (255) pixels in the modified label image with a custom blue color
 			black_pixels = np.where(modified_labels == 255)
 			modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
 
-			# Replace white pixels with custom RGB color
+			# Replace white (0) pixels in the modified label image with a custom RGB color
 			white_pixels = np.where(modified_labels == 0)
 			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
 
@@ -119,85 +146,108 @@ with st.form(key = 'form1', clear_on_submit = True):
 		unique_labels = np.unique(labels)
 		num_labels = len(unique_labels) - 1  # subtract 1 to exclude background label
 		if num_labels != labels.max():
-			raise Exception ('Each blob does not have a unique integer assigned to it.')
+			raise Exception('Each blob does not have a unique integer assigned to it.')
 
 		##############################################################
-		
-		image_comparison(img1 = rgb_image, img2 = modified_labels_rgb_image, label1="Uploaded image", label2="Result", width = 674, in_memory = True, show_labels = True, make_responsive = True)
 
+		# Compare the uploaded RGB image with the modified label image
+		# using a function called "image_comparison"
+		# Set parameters for image width, in-memory display, and responsiveness
+		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Result", width=674, in_memory=True, show_labels=True, make_responsive=True)
+
+		# Add a markdown line break
 		st.markdown("")
 
 		##############################################################
 
-		# Compute the region properties
-		label_properties = measure.regionprops_table(labels, intensity_image = rgb_image, properties=('area', 'centroid', 'eccentricity','label', 'orientation'))
+		# Compute the region properties for each label in the label image
+		# using a function called "measure.regionprops_table"
+		# The properties computed include area, centroid, eccentricity, label, and orientation
+		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'centroid', 'eccentricity','label', 'orientation'))
 
-		# Create a Pandas DataFrame
+		# Create a Pandas DataFrame to store the region properties
 		dataframe = pd.DataFrame(label_properties)
 
 		##############################################################
 
+		# Extract the centroid coordinates from the DataFrame and convert them to a NumPy array
 		centroids = list(zip(dataframe['centroid-1'], dataframe['centroid-0']))
-
 		centroids = np.asarray(centroids)
 
 		##############################################################
 
 		with st.spinner('Creating plots and report...'):
 
-			# Compute KDE heatmap
-
+			# Define a subsampling factor for the KDE heatmap
 			subsample_factor = 2
 
+			# Compute a kernel density estimate (KDE) heatmap of the centroid coordinates
+			# using a function called "compute_kde_heatmap"
 			kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor)
 
 			##############################################################
 
-			# Choose criterion from ['area', 'eccentricity', 'orientation']
+			# Choose a criterion to cluster the labels on
+			# criterion = 'eccentricity'
+			criterion = 'area'
 
-			criterion = 'eccentricity'
+			# Specify the number of clusters to use for KMeans clustering
+			cluster_number = 4
 
+			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
 			criterion_list = list(dataframe[criterion])
 			criterion_list = np.atleast_2d(np.asarray(criterion_list))
 
-			cluster_number = 3
-
-			# Cluster the labels by criterion
+			# Cluster the labels based on the chosen criterion using a function called "cluster_labels_by_criterion"
 			cluster_labels = cluster_labels_by_criterion(criterion_list, labels, n_clusters=cluster_number)
 
 			##############################################################
 
+			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
+			# using a function called "make_plots"
 			figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number)
 
+			# Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(figure)
 
 		##################################################################
 
 		st.markdown("""---""")
 
-		# with st.spinner('Creating report...'):
+		# Define a mapping of the old column names to the new column names
+		column_mapping = {
+			'area': 'Region Area',
+			'centroid-0': 'Region Centroid-0',
+			'centroid-1': 'Region Centroid-1',
+			'eccentricity': 'Eccentricity',
+			'equivalent_diameter': 'Equivalent Diameter',
+			'orientation': 'Orientation',
+			'label': 'Label #'
+		}
 
-		# Rename some columns
-		dataframe_renamed = dataframe.rename(columns={'area': 'Region Area', 'centroid': 'Region Centroid', 'eccentricity':'Eccentricity', 'equivalent_diameter':'Equivalent Diameter','orientation':'Orientation', 'label':'Label #'})
+		# Rename the columns of the DataFrame using the mapping
+		renamed_dataframe = dataframe.rename(columns=column_mapping)
 
-		dataframe_renamed = dataframe_renamed.drop(['centroid-0', 'centroid-1'], axis=1)
+		# Remove the 'Region Centroid-0' and 'Region Centroid-1' columns from the DataFrame
+		renamed_dataframe = renamed_dataframe.drop(columns=['Region Centroid-0', 'Region Centroid-1'])
+		
+		# Move the 'Label #' column to the beginning of the DataFrame
+		cols = list(renamed_dataframe.columns)
+		cols.pop(cols.index('Label #'))
+		renamed_dataframe = renamed_dataframe[['Label #'] + cols]
 
-		# remove the 'label' column and save it to a variable
-		label_col = dataframe_renamed.pop('Label #')
+		# Make all the columns except 'Eccentricity' integer type using the "astype" method
+		int_columns = [c for c in renamed_dataframe.columns if c != 'Eccentricity' and c!= 'Orientation']
+		renamed_dataframe[int_columns] = renamed_dataframe[int_columns].astype(int)
 
-		# insert the 'label' column back into the dataframe as the 1st column
-		dataframe_renamed.insert(0, 'Label #', label_col)
+		# Convert the 'Orientation' column from radians to degrees and shift by 90 degrees using the "apply" method
+		renamed_dataframe['Orientation'] = np.rad2deg(renamed_dataframe['Orientation']).add(90)
 
-		dataframe_renamed['Label #'] = dataframe_renamed['Label #'].astype(int)
-
-		dataframe_renamed['Orientation'] = np.rad2deg(dataframe_renamed['Orientation']) + 90
-
-		# BlankIndex = [''] * len(dataframe_renamed)
-		# dataframe_renamed.index = BlankIndex
-
+		# Display the detailed report
 		st.markdown("Detailed Report")
 
-		st.dataframe(dataframe_renamed.style.format("{:.2f}"), use_container_width = True)
+		# Show the dataframe
+		st.dataframe(renamed_dataframe, use_container_width = True)
 
 		##################################################################
 
