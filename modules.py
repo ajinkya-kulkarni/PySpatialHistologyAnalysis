@@ -349,7 +349,7 @@ def image_comparison(
 	img2: str,
 	label1: str = "1",
 	label2: str = "2",
-	width: int = 704,
+	width: int = 674,
 	show_labels: bool = True,
 	starting_position: int = 50,
 	make_responsive: bool = True,
