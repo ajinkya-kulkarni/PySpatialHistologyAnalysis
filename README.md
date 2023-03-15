@@ -5,7 +5,7 @@
 
 #### App Overview
 
-This is a web application for analyzing H&E images using the PySpatialHistologyAnalysis package and [StarDist](https://github.com/stardist/stardist). The app allows the user to upload an H&E image, and it performs object (nuclei) detection on the image using the StarDist2D model. The detected objects are then highlighted and displayed alongside the original image.
+This is a web application for analyzing H&E images using the PySpatialHistologyAnalysis package, which utilizes the [StarDist](https://github.com/stardist/stardist) and the [PySAL](https://pysal.org/) packages under it's hood. The app allows the user to upload an H&E image, and it performs object (nuclei) detection on the image using the StarDist2D model. The detected objects are then highlighted and displayed alongside the original image.
 
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialAnalysis/blob/main/screenshot1.png)
 

@@ -53,7 +53,7 @@ st.set_page_config(page_title = 'PySpatialHistologyAnalysis', page_icon = image_
 
 # Title of the web app
 
-st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis and StarDist]')
+st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis, PySAL and StarDist]')
 
 st.markdown("")
 
