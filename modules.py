@@ -115,6 +115,39 @@ def compute_kde_heatmap(centroids, label_image, subsample_factor):
 
 ##########################################################################
 
+from scipy.spatial.distance import pdist, squareform
+
+def plot_neighborhood_analysis(label_image):
+	"""
+	Plots a heatmap of the pairwise distance between the centroids of each label in the input label image.
+
+	Parameters:
+	label_image (numpy array): A labeled image where each blob has a unique integer label.
+
+	Returns:
+	A matplotlib figure object.
+	"""
+	# Compute centroids of each label
+	centroids = []
+	for label in np.unique(label_image)[1:]:
+		coords = np.where(label_image == label)
+		centroid = (np.mean(coords[0]), np.mean(coords[1]))
+		centroids.append(centroid)
+
+	# Compute pairwise distance matrix between centroids
+	distances = squareform(pdist(centroids))
+
+	# Create heatmap plot of distances
+	fig, ax = plt.subplots()
+	im = ax.imshow(distances, cmap='viridis')
+	cbar = ax.figure.colorbar(im, ax=ax)
+	cbar.ax.set_ylabel('Pairwise Distance', rotation=-90, va="bottom")
+	ax.set_title('Pairwise Distance Heatmap of Label Centroids')
+
+	return distances
+	
+##########################################################################
+
 def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_init = 20):
 	"""
 	Clusters the labels in a label image based on a criterion.
@@ -148,7 +181,7 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
 	# Create the figure and axis objects
-	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 9), dpi = DPI)
+	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8), dpi = DPI)
 
 	# Display uploaded image
 	im = axs[0, 0].imshow(rgb_image)

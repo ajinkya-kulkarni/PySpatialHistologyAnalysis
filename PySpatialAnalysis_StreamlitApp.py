@@ -182,6 +182,9 @@ with st.form(key='form1', clear_on_submit=True):
 			# using a function called "compute_kde_heatmap"
 			kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor)
 
+			# # Calculate Pairwise Distance Heatmap of Label Centroids
+			# pairwise_distances = plot_neighborhood_analysis(labels)
+
 			##############################################################
 
 			# Choose a criterion to cluster the labels on
