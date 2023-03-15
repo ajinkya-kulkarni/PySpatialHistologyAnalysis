@@ -29,9 +29,6 @@ from io import BytesIO
 from skimage import measure
 
 import pandas as pd
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.colors import ListedColormap
 
 import sys
 # Don't generate the __pycache__ folder locally
@@ -89,6 +86,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	if submitted:
 
+		st.markdown("Results")
+
 		with st.spinner('Analyzing uploaded image...'):
 
 			rgb_image = read_image(uploaded_file)
@@ -133,7 +132,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		##############################################################
 
 		# Compute the region properties
-		label_properties = measure.regionprops_table(labels, intensity_image = rgb_image, properties=('area', 'centroid', 'eccentricity', 'equivalent_diameter','label', 'orientation', 'perimeter'))
+		label_properties = measure.regionprops_table(labels, intensity_image = rgb_image, properties=('area', 'centroid', 'eccentricity','label', 'orientation'))
 
 		# Create a Pandas DataFrame
 		dataframe = pd.DataFrame(label_properties)
@@ -146,68 +145,61 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		##############################################################
 
-		st.markdown("")
+		st.markdown("""---""")
 
-		# Compute KDE heatmap
-		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 2)
+		with st.spinner('Creating plots and report...'):
 
-		##################################################################
+			# Compute KDE heatmap
 
-		st.markdown("")
+			subsample_factor = 2
 
-		##################################################################
+			kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor)
 
-		eccentricity_list = list(dataframe['eccentricity'])
-		eccentricity_list = np.atleast_2d(np.asarray(eccentricity_list))
+			##############################################################
 
-		cluster_number = 4
+			# Choose criterion from ['area', 'eccentricity', 'orientation']
 
-		# Cluster the labels by eccentricity
-		cluster_labels = cluster_labels_by_eccentricity(eccentricity_list, labels, n_clusters=cluster_number)
+			criterion = 'eccentricity'
 
-		##################################################################
+			criterion_list = list(dataframe[criterion])
+			criterion_list = np.atleast_2d(np.asarray(criterion_list))
 
-		# Create the figure and axis objects
-		fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+			cluster_number = 4
 
-		# Overlay the labels image and KDE heatmap on the first subplot
-		im = axs[0].imshow(modified_labels, cmap = 'binary')
-		im_heatmap = axs[0].imshow(kde_heatmap / kde_heatmap.max(), cmap='jet', vmin = 0, vmax = 1, alpha=0.8)
-		# Add a colorbar
-		divider = make_axes_locatable(axs[0])
-		cax = divider.append_axes("right", size="3%", pad=0.07)
-		cb = fig.colorbar(im_heatmap, cax=cax)
-		cb.ax.set_yticklabels(["{:.1f}".format(i) for i in cb.get_ticks()]) # set ticks of your format
-		axs[0].set_title('Nuclei Density')
-		# Turn off axis ticks and labels
-		axs[0].set_xticks([])
-		axs[0].set_yticks([])
+			# Cluster the labels by criterion
+			cluster_labels = cluster_labels_by_criterion(criterion_list, labels, n_clusters=cluster_number)
 
-		# Overlay the clustered blob labels on the second subplot
-		im = axs[1].imshow(cluster_labels, cmap='tab20c')
-		# Add a colorbar
-		divider = make_axes_locatable(axs[1])
-		cax = divider.append_axes("right", size="3%", pad=0.07)
-		cb = fig.colorbar(im, cax=cax)
-		cb.ax.set_yticklabels([str(int(i)) for i in cb.get_ticks()]) # set ticks of your format
-		axs[1].set_title('Nuclei colored by Eccentricity')
-		# Turn off axis ticks and labels
-		axs[1].set_xticks([])
-		axs[1].set_yticks([])
-		cax.remove()
+			##############################################################
 
-		# Adjust the layout of the subplots
-		plt.tight_layout()
-		st.pyplot(fig)
+			figure = make_plots(rgb_image, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number)
+
+			st.pyplot(figure)
 
 		##################################################################
 
-		st.markdown("")
+		st.markdown("""---""")
 
-		st.markdown("Detailed Report")
+		# with st.spinner('Creating report...'):
 
 		# Rename some columns
 		dataframe_renamed = dataframe.rename(columns={'area': 'Region Area', 'centroid': 'Region Centroid', 'eccentricity':'Eccentricity', 'equivalent_diameter':'Equivalent Diameter','orientation':'Orientation', 'label':'Label #'})
+
+		dataframe_renamed = dataframe_renamed.drop(['centroid-0', 'centroid-1'], axis=1)
+
+		# remove the 'label' column and save it to a variable
+		label_col = dataframe_renamed.pop('Label #')
+
+		# insert the 'label' column back into the dataframe as the 1st column
+		dataframe_renamed.insert(0, 'Label #', label_col)
+
+		dataframe_renamed['Label #'] = dataframe_renamed['Label #'].astype(int)
+
+		dataframe_renamed['Orientation'] = np.rad2deg(dataframe_renamed['Orientation']) + 90
+
+		# BlankIndex = [''] * len(dataframe_renamed)
+		# dataframe_renamed.index = BlankIndex
+
+		st.markdown("Detailed Report")
 
 		st.dataframe(dataframe_renamed.style.format("{:.2f}"), use_container_width = True)
 

@@ -22,6 +22,11 @@
 
 from PIL import Image
 import numpy as np
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import ListedColormap
+
 from scipy.spatial.distance import cdist
 from scipy.stats import gaussian_kde
 from sklearn.cluster import KMeans
@@ -81,7 +86,7 @@ def perform_analysis(rgb_image):
 
 ##########################################################################
 
-def compute_kde_heatmap(centroids, label_image, subsample_factor=100):
+def compute_kde_heatmap(centroids, label_image, subsample_factor):
 	"""
 	Computes a kernel density estimate (KDE) heatmap of the input centroids.
 
@@ -111,23 +116,24 @@ def compute_kde_heatmap(centroids, label_image, subsample_factor=100):
 
 ##########################################################################
 
-def cluster_labels_by_eccentricity(eccentricities, label_image, n_clusters=5):
+def cluster_labels_by_criterion(criterion_list, label_image, n_clusters=3):
 	"""
-	Clusters the labels in a label image based on their eccentricity values.
+	Clusters the labels in a label image based on a criterion.
 
 	Parameters:
 	label_image (numpy array): A labeled image where each blob has a unique integer label.
-	eccentricities (numpy array): A 1D numpy array of eccentricity values for each label in the image.
+	criterion (numpy array): A 1D numpy array of criterion for each label in the image.
 	n_clusters (int): The number of clusters to use for KMeans clustering.
 
 	Returns:
 	A numpy array representing the cluster labels evaluated on the input label image.
 	"""
-	# Reshape the eccentricities array
-	eccentricities = eccentricities.ravel()
+	# Reshape the criterion_list array
+	criterion_list = criterion_list.ravel()
 
-	# Perform KMeans clustering on the eccentricity values
-	kmeans = KMeans(n_clusters=n_clusters).fit(eccentricities.reshape(-1, 1))
+	# Perform KMeans clustering on the criterion values
+
+	kmeans = KMeans(n_clusters = n_clusters, n_init = 10).fit(criterion_list.reshape(-1, 1))
 
 	# Assign cluster labels to each label in the input image
 	cluster_labels = np.zeros_like(label_image)
@@ -138,43 +144,59 @@ def cluster_labels_by_eccentricity(eccentricities, label_image, n_clusters=5):
 
 ##########################################################################
 
-def ripley_k(centroids, r_max, num_points=100):
-	"""
-	Computes Ripley's K function for a set of points in 2D space.
+def make_plots(rgb_image, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, DPI = 300):
 
-	Parameters:
-	centroids (list or numpy array): A list or numpy array of centroid coordinates.
-	r_max (float): The maximum radius to compute K function for.
-	num_points (int): The number of points to use for the grid in each dimension.
+	# Create the figure and axis objects
+	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8), dpi = DPI)
 
-	Returns:
-	A tuple containing the distance bins and the values of the K function.
-	"""
-	# Compute pairwise distance between centroids
-	distances = cdist(centroids, centroids)
+	# Display uploaded image
+	im = axs[0, 0].imshow(rgb_image)
+	# Add a colorbar
+	divider = make_axes_locatable(axs[0, 0])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im, cax=cax)
+	axs[0, 0].set_title('Uploaded Image')
+	# Turn off axis ticks and labels
+	axs[0, 0].set_xticks([])
+	axs[0, 0].set_yticks([])
+	cax.remove()
+	
+	# Display labelled image
+	im = axs[0, 1].imshow(modified_labels_rgb_image)
+	# Add a colorbar
+	divider = make_axes_locatable(axs[0, 1])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im, cax=cax)
+	axs[0, 1].set_title('Segmented Nuclei')
+	# Turn off axis ticks and labels
+	axs[0, 1].set_xticks([])
+	axs[0, 1].set_yticks([])
+	cax.remove()
 
-	# Define range of radii to compute K function for
-	r = np.linspace(0, r_max, num_points)
+	# Overlay the labels image and KDE heatmap
+	im = axs[1, 0].imshow(modified_labels, cmap = 'binary', zorder = 1)
+	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.8, zorder = 2)
+	# Add a colorbar
+	divider = make_axes_locatable(axs[1, 0])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im_heatmap, cax=cax)
+	axs[1, 0].set_title('Nuclei Density')
+	# Turn off axis ticks and labels
+	axs[1, 0].set_xticks([])
+	axs[1, 0].set_yticks([])
 
-	# Compute K function values for each radius
-	K_values = []
-	for radius in r:
-		N_pairs = (distances <= radius).sum() - len(centroids)
-		K = N_pairs / len(centroids)
-		K_values.append(K)
-
-	# Compute expected K function values for a homogeneous Poisson point process
-	lambda_ = len(centroids) / ((centroids.max(axis=0) - centroids.min(axis=0)).prod())
-	expected_K_values = np.pi * r**2 * lambda_
-
-	# Compute cumulative K function values
-	K_cumulative = np.cumsum(K_values) / len(centroids)
-	expected_K_cumulative = np.cumsum(expected_K_values) / len(centroids)
-
-	# Compute corrected K function values
-	K_corrected = np.sqrt(K_cumulative / np.pi) - r
-	expected_K_corrected = np.sqrt(expected_K_cumulative / np.pi) - r
-
-	return r, K_corrected - expected_K_corrected
+	# Display the clustered blob labels
+	im = axs[1, 1].imshow(cluster_labels, cmap='viridis')
+	# Add a colorbar
+	divider = make_axes_locatable(axs[1, 1])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im, cax=cax)
+	axs[1, 1].set_title('Nuclei grouped into ' + str(cluster_number - 1) + ' classes by ' + criterion)
+	# Turn off axis ticks and labels
+	axs[1, 1].set_xticks([])
+	axs[1, 1].set_yticks([])
+	cax.remove()
+	
+	return fig
 
 ##########################################################################
