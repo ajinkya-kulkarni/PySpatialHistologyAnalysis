@@ -149,7 +149,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		st.markdown("")
 
 		# Compute KDE heatmap
-		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 2)
+		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 4)
 
 		##################################################################
 
@@ -172,7 +172,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Overlay the labels image and KDE heatmap on the first subplot
 		im = axs[0].imshow(modified_labels, cmap = 'binary')
-		im_heatmap = axs[0].imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.8)
+		im_heatmap = axs[0].imshow(kde_heatmap / kde_heatmap.max(), cmap='jet', vmin = 0, vmax = 1, alpha=0.8)
 		# Add a colorbar
 		divider = make_axes_locatable(axs[0])
 		cax = divider.append_axes("right", size="3%", pad=0.07)
