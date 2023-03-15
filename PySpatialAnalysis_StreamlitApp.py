@@ -149,7 +149,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		st.markdown("")
 
 		# Compute KDE heatmap
-		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 4)
+		kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor = 2)
 
 		##################################################################
 
