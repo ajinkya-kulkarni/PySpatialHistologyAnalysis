@@ -25,9 +25,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.colors import ListedColormap
 
-from scipy.spatial.distance import cdist
 from scipy.stats import gaussian_kde
 from sklearn.cluster import KMeans
 
@@ -442,3 +440,5 @@ def image_comparison(
 	static_component = components.html(htmlcode, height=height, width=width)
 
 	return static_component
+
+##########################################################################

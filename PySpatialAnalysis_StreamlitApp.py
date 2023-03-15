@@ -137,7 +137,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		##############################################################
 
-		centroids = list(zip(dataframe['centroid-0'], dataframe['centroid-1']))
+		centroids = list(zip(dataframe['centroid-1'], dataframe['centroid-0']))
 
 		centroids = np.asarray(centroids)
 
