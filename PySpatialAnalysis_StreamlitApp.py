@@ -178,7 +178,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		cax = divider.append_axes("right", size="3%", pad=0.07)
 		cb = fig.colorbar(im_heatmap, cax=cax)
 		cb.ax.set_yticklabels(["{:.1f}".format(i) for i in cb.get_ticks()]) # set ticks of your format
-		axs[0].set_title('Kernel Density Estimate heatmap of Nuclei')
+		axs[0].set_title('Nuclei Density')
 		# Turn off axis ticks and labels
 		axs[0].set_xticks([])
 		axs[0].set_yticks([])
