@@ -16,6 +16,7 @@ This is primarily a [web application](https://pyspatialhistologyinformation.stre
 
 The app is built using the Streamlit framework and requires the following dependencies:
 - stardist
+- opencv-python
 - streamlit
 - Pillow
 - numpy
