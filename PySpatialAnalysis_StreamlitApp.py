@@ -91,9 +91,6 @@ with st.form(key='form1', clear_on_submit=True):
 	# Add a submit button to the form
 	submitted = st.form_submit_button('Analyze')
 
-	# Add some vertical space between the form and the next section
-	st.markdown("")
-
 	######################################################################
 
 	# If no file was uploaded, stop processing and exit early
