@@ -173,7 +173,7 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 
 	# Overlay the labels image and KDE heatmap
 	im = axs[1, 0].imshow(modified_labels, cmap = 'binary', zorder = 1)
-	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.8, zorder = 2)
+	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='RdYlBu_r', vmin = 0, vmax = 1, alpha=0.8, zorder = 2)
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
