@@ -385,7 +385,7 @@ def image_comparison(
 	img2: str,
 	label1: str = "1",
 	label2: str = "2",
-	width: int = 1169,
+	width: int = 674,
 	show_labels: bool = True,
 	starting_position: int = 50,
 	make_responsive: bool = True,
@@ -405,7 +405,7 @@ def image_comparison(
 	label2: str, optional
 		Label for the second image. Default is "2".
 	width: int, optional
-		Width of the component in pixels. Default is 704.
+		Width of the component in pixels. Default is 674.
 	show_labels: bool, optional
 		Whether to show labels on the images. Default is True.
 	starting_position: int, optional
