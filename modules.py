@@ -385,7 +385,6 @@ def image_comparison(
 	img2: str,
 	label1: str = "1",
 	label2: str = "2",
-	width: int = 674,
 	show_labels: bool = True,
 	starting_position: int = 50,
 	make_responsive: bool = True,
@@ -426,6 +425,7 @@ def image_comparison(
 
 	img_width, img_height = img1_pillow.size
 	h_to_w = img_height / img_width
+	width = 674
 	height = int((width * h_to_w) * 0.95)
 
 	if in_memory:
