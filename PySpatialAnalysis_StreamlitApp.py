@@ -67,6 +67,8 @@ st.set_page_config(
 # Set the title of the web app
 st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis, PySAL and StarDist]')
 
+st.caption('For more information, have a look at [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png) and [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/TestImage.png). Source code available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis).', unsafe_allow_html = False)
+
 # Add some vertical space between the title and the next section
 st.markdown("")
 
