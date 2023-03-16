@@ -29,6 +29,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from scipy.stats import gaussian_kde
 from sklearn.cluster import KMeans
+from scipy.spatial.distance import pdist, squareform
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -115,8 +116,6 @@ def compute_kde_heatmap(centroids, label_image, subsample_factor):
 
 ##########################################################################
 
-from scipy.spatial.distance import pdist, squareform
-
 def plot_neighborhood_analysis(label_image):
 	"""
 	Plots a heatmap of the pairwise distance between the centroids of each label in the input label image.
@@ -176,12 +175,58 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_i
 
 ##########################################################################
 
-def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, title_PAD = 12, DPI = 300):
+from scipy import signal
+
+def convolve(image, kernel):
+	"""
+	Perform convolution on a binary image with a kernel of any size
+
+	Parameters:
+		image (np.ndarray): binary image to perform convolution on
+		kernel (np.ndarray): kernel of any size
+
+	Returns:
+		np.ndarray: binary image after convolution
+	"""
+
+	# Convert the input image to a valid data type
+	image = np.array(image, dtype=np.float32)
+
+	# Get the shape of the image
+	i_h, i_w = image.shape
+
+	# Get the shape of the kernel
+	k_h, k_w = kernel.shape
+
+	# Check if the kernel is of odd size
+	if k_h % 2 == 0 or k_w % 2 == 0:
+		raise ValueError("Kernel must be of odd size")
+
+	# Check if the kernel size is smaller than the image dimensions
+	if k_h > i_h or k_w > i_w:
+		raise ValueError("Kernel size must be smaller than image dimensions")
+
+	# Pad the image with the pixels along the edges
+	pad_h = int((k_h - 1) / 2)
+	pad_w = int((k_w - 1) / 2)
+	image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
+
+	# Get the total number of elements in the kernel
+	total_elements = k_h * k_w
+
+	# Perform convolution
+	result = signal.convolve2d(image, kernel / total_elements, mode='same', boundary='fill', fillvalue=0)
+
+	return result[pad_h:-pad_h, pad_w:-pad_w]
+
+##########################################################################
+
+def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, title_PAD = 10, DPI = 300, ALPHA = 0.9):
 
 	gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
 	# Create the figure and axis objects
-	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8), dpi = DPI)
+	fig, axs = plt.subplots(nrows=3, ncols=2, figsize=(10, 12), dpi = DPI)
 
 	# Display uploaded image
 	im = axs[0, 0].imshow(rgb_image)
@@ -209,18 +254,18 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 
 	# Overlay the grayscale image and KDE heatmap
 	im = axs[1, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
-	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='coolwarm', vmin = 0, vmax = 1, alpha=0.5, zorder = 2)
+	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='magma', vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2)
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_heatmap, cax=cax)
-	axs[1, 0].set_title('Nuclei Density', pad = title_PAD)
+	axs[1, 0].set_title('Nuclei clusters', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[1, 0].set_xticks([])
 	axs[1, 0].set_yticks([])
 
 	# Display the clustered blob labels figure
-	im_clusters = axs[1, 1].imshow(cluster_labels, alpha=0.8, cmap='viridis')
+	im_clusters = axs[1, 1].imshow(cluster_labels, alpha=ALPHA, cmap='cividis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 1])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -230,6 +275,21 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	axs[1, 1].set_xticks([])
 	axs[1, 1].set_yticks([])
 	cax.remove()
+
+	# Display the density map figure
+	im = axs[2, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
+	im_density = axs[2, 0].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='magma')
+	# Add a colorbar
+	divider = make_axes_locatable(axs[2, 0])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im_density, cax=cax)
+	axs[2, 0].set_title('Local Density', pad = title_PAD)
+	# Turn off axis ticks and labels
+	axs[2, 0].set_xticks([])
+	axs[2, 0].set_yticks([])
+
+	# Remove the last subplot in the bottom row
+	fig.delaxes(axs[2, 1])
 	
 	return fig
 

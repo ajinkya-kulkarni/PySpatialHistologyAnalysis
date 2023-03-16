@@ -143,7 +143,7 @@ with st.form(key='form1', clear_on_submit=True):
 
 		# Check that each label is a unique integer
 		unique_labels = np.unique(labels)
-		num_labels = len(unique_labels) - 1  # subtract 1 to exclude background label
+		num_labels = len(unique_labels) - 1  # subtract 1 to exclude the background label
 		if num_labels != labels.max():
 			raise Exception('Each blob does not have a unique integer assigned to it.')
 
@@ -152,7 +152,7 @@ with st.form(key='form1', clear_on_submit=True):
 		# Compare the uploaded RGB image with the modified label image
 		# using a function called "image_comparison"
 		# Set parameters for image width, in-memory display, and responsiveness
-		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Result", in_memory=True, show_labels=True, make_responsive=True)
+		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image", in_memory=True, show_labels=True, make_responsive=True)
 
 		# Add a markdown line break
 		st.markdown("")
@@ -184,8 +184,27 @@ with st.form(key='form1', clear_on_submit=True):
 			# using a function called "compute_kde_heatmap"
 			kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor)
 
+			##############################################################
+
 			# # Calculate Pairwise Distance Heatmap of Label Centroids
 			# pairwise_distances = plot_neighborhood_analysis(labels)
+
+			##############################################################
+
+			# Calculate heatmap based on labelled image
+
+			local_kernel_size = int(0.1 * min(modified_labels.shape[0], modified_labels.shape[1]) )
+
+			if (local_kernel_size % 2 == 0):
+				local_kernel_size = local_kernel_size + 1
+			if (local_kernel_size < 3):
+				local_kernel_size = 3
+
+			local_kernel = np.ones((local_kernel_size, local_kernel_size), dtype = np.float32) / (local_kernel_size * local_kernel_size)
+
+			Local_Density = convolve(modified_labels, local_kernel)
+
+			Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
 
 			##############################################################
 
@@ -207,7 +226,7 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			# using a function called "make_plots"
-			figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, kde_heatmap, criterion, cluster_labels, cluster_number)
+			figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number)
 
 			# Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(figure)
