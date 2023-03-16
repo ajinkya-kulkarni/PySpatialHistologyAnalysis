@@ -152,7 +152,7 @@ with st.form(key='form1', clear_on_submit=True):
 		# Compare the uploaded RGB image with the modified label image
 		# using a function called "image_comparison"
 		# Set parameters for image width, in-memory display, and responsiveness
-		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Result", width=1169, in_memory=True, show_labels=True, make_responsive=True)
+		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Result", width=674, in_memory=True, show_labels=True, make_responsive=True)
 
 		# Add a markdown line break
 		st.markdown("")
