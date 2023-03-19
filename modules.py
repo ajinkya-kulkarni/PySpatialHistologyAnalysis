@@ -30,6 +30,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import gaussian_kde
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import pdist, squareform
+from scipy import signal
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -86,18 +87,25 @@ def perform_analysis(rgb_image):
 
 ##########################################################################
 
-def compute_kde_heatmap(centroids, label_image, subsample_factor):
+def compute_kde_heatmap(centroids, label_image, max_num_centroids=100):
 	"""
 	Computes a kernel density estimate (KDE) heatmap of the input centroids.
 
 	Parameters:
 	centroids (list or numpy array): A list or numpy array of centroid coordinates.
 	label_image (numpy array): A labeled image where each blob has a unique integer label.
-	subsample_factor (int): The factor by which to subsample the centroid coordinates.
+	max_num_centroids (int): The maximum number of centroids to use.
 
 	Returns:
 	A numpy array representing the KDE evaluated on a 2D grid.
 	"""
+	# Compute subsample factor
+	num_centroids = len(centroids)
+	if num_centroids <= max_num_centroids:
+		subsample_factor = 1
+	else:
+		subsample_factor = int(np.ceil(num_centroids / max_num_centroids))
+	
 	# Subsample centroid coordinates
 	centroids = centroids[::subsample_factor]
 
@@ -175,8 +183,6 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters = 3, n_i
 
 ##########################################################################
 
-from scipy import signal
-
 def convolve(image, kernel):
 	"""
 	Perform convolution on a binary image with a kernel of any size
@@ -221,12 +227,12 @@ def convolve(image, kernel):
 
 ##########################################################################
 
-def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.07, title_PAD = 10, DPI = 300, ALPHA = 0.9):
+def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 1):
 
 	gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
 	# Create the figure and axis objects
-	fig, axs = plt.subplots(nrows=3, ncols=2, figsize=(10, 12), dpi = DPI)
+	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(10, 8), dpi = DPI)
 
 	# Display uploaded image
 	im = axs[0, 0].imshow(rgb_image)
@@ -252,44 +258,48 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	axs[0, 1].set_yticks([])
 	cax.remove()
 
-	# Overlay the grayscale image and KDE heatmap
-	im = axs[1, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
-	im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='magma', vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2)
+	# # Overlay the grayscale image and KDE heatmap
+	# # im = axs[1, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
+	# im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='jet', vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2)
+	# # Add a colorbar
+	# divider = make_axes_locatable(axs[1, 0])
+	# cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	# cb = fig.colorbar(im_heatmap, cax=cax)
+	# axs[1, 0].set_title('Nuclei clusters', pad = title_PAD)
+	# # Turn off axis ticks and labels
+	# axs[1, 0].set_xticks([])
+	# axs[1, 0].set_yticks([])
+
+	# Display the clustered blob labels figure
+	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	cb = fig.colorbar(im_heatmap, cax=cax)
-	axs[1, 0].set_title('Nuclei clusters', pad = title_PAD)
+	cb = fig.colorbar(im_clusters, cax=cax)
+	axs[1, 0].set_title(str(cluster_number - 1) + ' nuclei groups by ' + criterion, pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[1, 0].set_xticks([])
 	axs[1, 0].set_yticks([])
+	# get tick locations and update to integers
+	cb.set_ticks(range(cluster_number))
+	tick_locs = cb.get_ticks()
+	int_tick_labels = [int(tick) for tick in tick_locs]
+	cb.set_ticklabels(int_tick_labels)
 
-	# Display the clustered blob labels figure
-	im_clusters = axs[1, 1].imshow(cluster_labels, alpha=ALPHA, cmap='cividis')
+	# Display the density map figure
+	# im = axs[2, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
+	im_density = axs[1, 1].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='Spectral_r')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 1])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	cb = fig.colorbar(im_clusters, cax=cax)
-	axs[1, 1].set_title('Nuclei grouped into ' + str(cluster_number - 1) + ' classes by ' + criterion, pad = title_PAD)
+	cb = fig.colorbar(im_density, cax=cax)
+	axs[1, 1].set_title('Local Nuclei Density', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[1, 1].set_xticks([])
 	axs[1, 1].set_yticks([])
-	cax.remove()
 
-	# Display the density map figure
-	im = axs[2, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
-	im_density = axs[2, 0].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='magma')
-	# Add a colorbar
-	divider = make_axes_locatable(axs[2, 0])
-	cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	cb = fig.colorbar(im_density, cax=cax)
-	axs[2, 0].set_title('Local Density', pad = title_PAD)
-	# Turn off axis ticks and labels
-	axs[2, 0].set_xticks([])
-	axs[2, 0].set_yticks([])
-
-	# Remove the last subplot in the bottom row
-	fig.delaxes(axs[2, 1])
+	# # Remove the last subplot in the bottom row
+	# fig.delaxes(axs[2, 1])
 	
 	return fig
 

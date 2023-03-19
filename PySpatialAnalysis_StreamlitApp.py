@@ -21,6 +21,7 @@
 ##########################################################################
 
 import streamlit as st
+import cv2
 
 from PIL import Image
 import numpy as np
@@ -152,6 +153,7 @@ with st.form(key='form1', clear_on_submit=True):
 		# Compare the uploaded RGB image with the modified label image
 		# using a function called "image_comparison"
 		# Set parameters for image width, in-memory display, and responsiveness
+
 		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image", in_memory=True, show_labels=True, make_responsive=True)
 
 		# Add a markdown line break
@@ -177,12 +179,9 @@ with st.form(key='form1', clear_on_submit=True):
 
 		with st.spinner('Creating plots and report...'):
 
-			# Define a subsampling factor for the KDE heatmap
-			subsample_factor = 2
-
 			# Compute a kernel density estimate (KDE) heatmap of the centroid coordinates
 			# using a function called "compute_kde_heatmap"
-			kde_heatmap = compute_kde_heatmap(centroids, labels, subsample_factor)
+			kde_heatmap = compute_kde_heatmap(centroids, labels)
 
 			##############################################################
 
@@ -191,18 +190,24 @@ with st.form(key='form1', clear_on_submit=True):
 
 			##############################################################
 
-			# Calculate heatmap based on labelled image
+			## Calculate heatmap based on labelled image
 
-			local_kernel_size = int(0.1 * min(modified_labels.shape[0], modified_labels.shape[1]) )
+			# local_kernel_size = int(0.2 * min(modified_labels.shape[0], modified_labels.shape[1]) )
 
-			if (local_kernel_size % 2 == 0):
-				local_kernel_size = local_kernel_size + 1
-			if (local_kernel_size < 3):
-				local_kernel_size = 3
+			# if (local_kernel_size % 2 == 0):
+			# 	local_kernel_size = local_kernel_size + 1
+			# if (local_kernel_size < 3):
+			# 	local_kernel_size = 3
 
-			local_kernel = np.ones((local_kernel_size, local_kernel_size), dtype = np.float32) / (local_kernel_size * local_kernel_size)
+			# local_kernel = np.ones((local_kernel_size, local_kernel_size), dtype = np.float32) / (local_kernel_size * local_kernel_size)
 
-			Local_Density = convolve(modified_labels, local_kernel)
+			# Local_Density = convolve(modified_labels, local_kernel)
+
+			# Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
+
+			window_size = int(0.1 * min(modified_labels.shape[0], modified_labels.shape[1]))
+
+			Local_Density = cv2.blur(modified_labels, (window_size, window_size))
 
 			Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
 
@@ -210,7 +215,7 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Choose a criterion to cluster the labels on
 			# criterion = 'eccentricity'
-			criterion = 'area'
+			criterion = 'eccentricity'
 
 			# Specify the number of clusters to use for KMeans clustering
 			cluster_number = 4
