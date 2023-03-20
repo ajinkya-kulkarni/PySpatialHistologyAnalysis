@@ -39,6 +39,8 @@ from contextlib import redirect_stdout
 
 from stardist.models import StarDist2D
 from csbdeep.utils import normalize
+from stardist import random_label_cmap
+RandomColormap = random_label_cmap()
 
 ##########################################################################
 
@@ -227,9 +229,7 @@ def convolve(image, kernel):
 
 ##########################################################################
 
-def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 1):
-
-	gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 1):
 
 	# Create the figure and axis objects
 	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(15, 12), dpi = DPI)
@@ -245,9 +245,11 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	axs[0, 0].set_xticks([])
 	axs[0, 0].set_yticks([])
 	cax.remove()
+
+	######################
 	
 	# Display labelled image
-	im = axs[0, 1].imshow(modified_labels_rgb_image)
+	im = axs[0, 1].imshow(labels, cmap = RandomColormap)
 	# Add a colorbar
 	divider = make_axes_locatable(axs[0, 1])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -258,20 +260,14 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	axs[0, 1].set_yticks([])
 	cax.remove()
 
-	# # Overlay the grayscale image and KDE heatmap
-	# # im = axs[1, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
-	# im_heatmap = axs[1, 0].imshow(kde_heatmap / kde_heatmap.max(), cmap='jet', vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2)
-	# # Add a colorbar
-	# divider = make_axes_locatable(axs[1, 0])
-	# cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	# cb = fig.colorbar(im_heatmap, cax=cax)
-	# axs[1, 0].set_title('Nuclei clusters', pad = title_PAD)
-	# # Turn off axis ticks and labels
-	# axs[1, 0].set_xticks([])
-	# axs[1, 0].set_yticks([])
+	######################
 
 	# Display the clustered blob labels figure
-
+	# Create a mask where cluster_labels is equal to 0
+	mask = np.where(cluster_labels == 0, np.nan, 1)
+	# Apply the mask to cluster_labels
+	cluster_labels = cluster_labels * mask
+	# Plot the image with NaN regions
 	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
@@ -286,9 +282,11 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	tick_locs = cb.get_ticks()
 	int_tick_labels = [int(tick) for tick in tick_locs]
 	cb.set_ticklabels(int_tick_labels)
+	cax.remove()
+
+	######################
 
 	# Display the density map figure
-	# im = axs[2, 0].imshow(gray_image, cmap = 'gray_r', zorder = 1)
 	im_density = axs[1, 1].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='Spectral_r')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 1])
@@ -298,6 +296,8 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	# Turn off axis ticks and labels
 	axs[1, 1].set_xticks([])
 	axs[1, 1].set_yticks([])
+
+	######################
 
 	# # Remove the last subplot in the bottom row
 	# fig.delaxes(axs[2, 1])

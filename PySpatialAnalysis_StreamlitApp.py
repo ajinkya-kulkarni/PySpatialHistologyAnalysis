@@ -184,7 +184,7 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Compute a kernel density estimate (KDE) heatmap of the centroid coordinates
 			# using a function called "compute_kde_heatmap"
-			kde_heatmap = compute_kde_heatmap(centroids, labels)
+			# kde_heatmap = compute_kde_heatmap(centroids, labels)
 
 			##############################################################
 
@@ -221,7 +221,7 @@ with st.form(key='form1', clear_on_submit=True):
 			criterion = 'area'
 
 			# Specify the number of clusters to use for KMeans clustering
-			cluster_number = 3
+			cluster_number = 5
 
 			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
 			criterion_list = list(dataframe[criterion])
@@ -234,7 +234,7 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			# using a function called "make_plots"
-			result_figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number)
+			result_figure = make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number)
 
 			# Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(result_figure)
