@@ -43,6 +43,7 @@ sys.tracebacklimit = 0
 ##########################################################################
 
 from modules import *
+from static_component import *
 
 ##########################################################################
 
@@ -157,7 +158,7 @@ with st.form(key='form1', clear_on_submit=True):
 		# using a function called "image_comparison"
 		# Set parameters for image width, in-memory display, and responsiveness
 
-		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image", in_memory=True, show_labels=True, make_responsive=True)
+		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image", show_labels=True, make_responsive=True)
 
 		# Add a markdown line break
 		st.markdown("")
