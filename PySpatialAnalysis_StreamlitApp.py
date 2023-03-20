@@ -31,6 +31,9 @@ from skimage import measure
 
 import pandas as pd
 
+import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 12})
+
 import sys
 # Don't generate the __pycache__ folder locally
 sys.dont_write_bytecode = True 
@@ -215,10 +218,10 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Choose a criterion to cluster the labels on
 			# criterion = 'eccentricity'
-			criterion = 'eccentricity'
+			criterion = 'area'
 
 			# Specify the number of clusters to use for KMeans clustering
-			cluster_number = 4
+			cluster_number = 3
 
 			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
 			criterion_list = list(dataframe[criterion])
@@ -231,10 +234,15 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			# using a function called "make_plots"
-			figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number)
+			result_figure = make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_labels, Local_Density, kde_heatmap, criterion, cluster_labels, cluster_number)
 
 			# Display the figure using Streamlit's "st.pyplot" function
-			st.pyplot(figure)
+			st.pyplot(result_figure)
+
+			# # Save the figure to a file
+			# result_figure.savefig('Result.png', bbox_inches='tight', dpi = 400)
+			# # Close the figure
+			# plt.close(result_figure)
 
 		##################################################################
 

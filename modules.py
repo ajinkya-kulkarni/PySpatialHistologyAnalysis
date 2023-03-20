@@ -232,7 +232,7 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
 	# Create the figure and axis objects
-	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(10, 8), dpi = DPI)
+	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(15, 12), dpi = DPI)
 
 	# Display uploaded image
 	im = axs[0, 0].imshow(rgb_image)
@@ -271,6 +271,7 @@ def make_plots(rgb_image, detailed_info, modified_labels_rgb_image, modified_lab
 	# axs[1, 0].set_yticks([])
 
 	# Display the clustered blob labels figure
+
 	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
