@@ -108,9 +108,9 @@ with st.form(key = 'form1', clear_on_submit = False):
 
 	with right_column:
 
-		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_eccentricity_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
+		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_roundness_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
 
-		eccentricity_cluster_number= int(st.session_state['-n_clusters_eccentricity_key-'])
+		roundness_cluster_number= int(st.session_state['-n_clusters_roundness_key-'])
 
 	st.markdown("")
 
@@ -188,7 +188,7 @@ with st.form(key = 'form1', clear_on_submit = False):
 
 		# Compute the region properties for each label in the label image
 		# using a function called "measure.regionprops_table"
-		# The properties computed include area, centroid, eccentricity, label, and orientation
+		# The properties computed include area, centroid, label, and orientation
 		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
 
 		# Create a Pandas DataFrame to store the region properties
@@ -197,9 +197,9 @@ with st.form(key = 'form1', clear_on_submit = False):
 		axis_major_length = label_properties['axis_major_length']
 		axis_minor_length = label_properties['axis_minor_length']
 
-		eccentricity = axis_minor_length / axis_major_length
+		roundness = (axis_minor_length / axis_major_length)
 
-		dataframe['eccentricity'] = eccentricity
+		dataframe['roundness'] = roundness
 
 		##############################################################
 
@@ -215,34 +215,20 @@ with st.form(key = 'form1', clear_on_submit = False):
 
 			##############################################################
 
-			# Choose a criterion to cluster the labels on
-			criterion = 'area'
+			# Perform binning of data into clusters
 
-			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
-			criterion_list = list(dataframe[criterion])
-			criterion_list = np.atleast_2d(np.asarray(criterion_list))
+			label_list = list(dataframe['label'])
 
-			# Cluster the labels based on the chosen criterion using a function called "cluster_labels_by_criterion"
-			area_cluster_labels = cluster_labels_by_criterion(criterion_list, labels, area_cluster_number)
+			area_binned_values = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
 
-			###############
-
-			# Choose a criterion to cluster the labels on
-			criterion = 'eccentricity'
-
-			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
-			criterion_list = list(dataframe[criterion])
-			criterion_list = np.atleast_2d(np.asarray(criterion_list))
-
-			# Cluster the labels based on the chosen criterion using a function called "cluster_labels_by_criterion"
-			eccentricity_cluster_labels = cluster_labels_by_criterion(criterion_list, labels, eccentricity_cluster_number)
+			roundness_binned_values = bin_property_values(labels, list(dataframe['roundness']), roundness_cluster_number)
 
 			##############################################################
 
 			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			# using a function called "make_plots"
 
-			result_figure = make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, eccentricity_cluster_labels, eccentricity_cluster_number)
+			result_figure = make_plots(rgb_image, labels, detailed_info, Local_Density, area_binned_values, area_cluster_number, roundness_binned_values, roundness_cluster_number)
 
 			# Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(result_figure)
@@ -261,7 +247,6 @@ with st.form(key = 'form1', clear_on_submit = False):
 			'area': 'Region Area',
 			'centroid-0': 'Region Centroid-0',
 			'centroid-1': 'Region Centroid-1',
-			'eccentricity': 'Eccentricity',
 			'equivalent_diameter': 'Equivalent Diameter',
 			'orientation': 'Orientation',
 			'label': 'Label #'
@@ -279,10 +264,6 @@ with st.form(key = 'form1', clear_on_submit = False):
 		cols = list(renamed_dataframe.columns)
 		cols.pop(cols.index('Label #'))
 		renamed_dataframe = renamed_dataframe[['Label #'] + cols]
-
-		# Make all the columns except 'Eccentricity' integer type using the "astype" method
-		int_columns = [c for c in renamed_dataframe.columns if c != 'Eccentricity' and c!= 'Orientation']
-		renamed_dataframe[int_columns] = renamed_dataframe[int_columns].astype(int)
 
 		# Convert the 'Orientation' column from radians to degrees and shift by 90 degrees using the "apply" method
 		renamed_dataframe['Orientation'] = np.rad2deg(renamed_dataframe['Orientation']).add(90)

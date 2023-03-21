@@ -95,45 +95,39 @@ def perform_analysis(rgb_image, threshold_probability):
 
 ##########################################################################
 
-def cluster_labels_by_criterion(criterion_list, label_image, n_clusters, n_init=20):
+def bin_property_values(labels, property_values, n_bins):
 	"""
-	Clusters the labels in a label image based on a criterion.
+	Bin the property values into n_bins equally spaced bins and assign the binned values to each label.
 
-	Parameters:
-	criterion_list (numpy array): A 1D numpy array of criterion for each label in the image.
-	label_image (numpy array): A labeled image where each blob has a unique integer label.
-	n_clusters (int): The number of clusters to use for KMeans clustering.
-	n_init (int): Number of time the k-means algorithm will be run with different centroid seeds.
+	Args:
+	- labels (ndarray): An array of integers representing the labels for each property value.
+	- property_values (ndarray): An array of floats representing the property values.
+	- n_bins (int): The number of equally spaced bins to create.
 
 	Returns:
-	A numpy array representing the cluster labels evaluated on the input label image.
+	- binned_values (ndarray): An array of floats representing the binned values for each label.
 	"""
-	# Reshape the criterion_list array
-	criterion_list = criterion_list.ravel()
-
-	# Get unique labels excluding the background label (0)
-	unique_labels = np.unique(label_image)[1:]
-
-	# Extract the criteria for the foreground labels
-	foreground_criteria = criterion_list[unique_labels - 1]
-
-	# Perform KMeans clustering on the foreground criteria
-	kmeans = KMeans(n_clusters=n_clusters, n_init=n_init).fit(foreground_criteria.reshape(-1, 1))
-
-	# Assign cluster labels to each label in the input image
-	cluster_labels = np.zeros_like(label_image)
-	for i, label in enumerate(unique_labels):
-		cluster_labels[label_image == label] = kmeans.labels_[i] + 1
-
-	return cluster_labels
+	# Compute the histogram of the property values
+	hist, bins = np.histogram(property_values, bins=n_bins)
+	
+	# Create an array to store the binned values
+	binned_values = np.zeros_like(labels, dtype=float)
+	binned_values.fill(np.nan)
+	
+	# Assign the binned values to each label
+	for i, p in enumerate(property_values):
+		binned_values[labels == i+1] = np.digitize(p, bins[:-1])
+	
+	return binned_values
 
 ##########################################################################
 
-def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, eccentricity_cluster_labels, eccentricity_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 	fig, axs = plt.subplot_mosaic([['b', 'c'], ['d', 'e']], figsize=(18, 15), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 	
 	# Display labelled image
+	
 	im = axs['b'].imshow(labels, cmap = RandomColormap)
 	# Add a colorbar
 	divider = make_axes_locatable(axs['b'])
@@ -148,6 +142,7 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 	######################
 
 	# Display the density map figure
+
 	im_density = axs['c'].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['c'])
@@ -159,56 +154,51 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 	axs['c'].set_yticks([])
 	# Calculate the tick locations for Low, Medium, and High
 	low_tick = 0
-	med_tick = 0.5
 	high_tick = 1
 	# Set ticks and labels for Low, Medium, and High
-	cb.set_ticks([low_tick, med_tick, high_tick])
-	cb.set_ticklabels(['Low', 'Medium', 'High'])
+	cb.set_ticks([low_tick, high_tick])
+	cb.set_ticklabels(['Low', 'High'])
 
 	######################
 
 	# # Display the area clustered blob labels figure
 
-	area_cluster_labels = np.where(area_cluster_labels==0, np.nan, area_cluster_labels)
-
-	im_area_cluster_labels = axs['d'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'Set1')
+	im_area_cluster_labels = axs['d'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'brg')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['d'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_area_cluster_labels, cax=cax)
-	axs['d'].set_title(str(area_cluster_number) + ' nuclei groups by area', pad = title_PAD)
+	axs['d'].set_title(str(area_cluster_number) + ' nuclei groups by Area', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['d'].set_xticks([])
 	axs['d'].set_yticks([])
 	
-	# Calculate the tick locations for Low, Medium, and High
+	# Calculate the tick locations for Low, and High
 	low_tick = 1
 	high_tick = area_cluster_number
-	# Set ticks and labels for Low, Medium, and High
+	# Set ticks and labels for Low and High
 	cb.set_ticks([low_tick, high_tick])
 	cb.set_ticklabels(['Low', 'High'])
 	# cax.remove()
 
 	######################
 
-	# # Display the eccentricity clustered blob labels figure
+	# # Display the roundness clustered blob labels figure
 
-	eccentricity_cluster_labels = np.where(eccentricity_cluster_labels==0, np.nan, eccentricity_cluster_labels)
-
-	im_eccentricity_cluster_labels = axs['e'].imshow(eccentricity_cluster_labels, alpha=ALPHA, cmap = 'Set1')
+	im_roundness_cluster_labels = axs['e'].imshow(roundness_cluster_labels, alpha=ALPHA, cmap = 'brg')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['e'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	cb = fig.colorbar(im_eccentricity_cluster_labels, cax=cax)
-	axs['e'].set_title(str(eccentricity_cluster_number) + ' nuclei groups by roundness', pad = title_PAD)
+	cb = fig.colorbar(im_roundness_cluster_labels, cax=cax)
+	axs['e'].set_title(str(roundness_cluster_number) + ' nuclei groups by Roundness', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['e'].set_xticks([])
 	axs['e'].set_yticks([])
 
-	# Calculate the tick locations for Low, Medium, and High
+	# Calculate the tick locations for Low and High
 	low_tick = 1
-	high_tick = eccentricity_cluster_number
-	# Set ticks and labels for Low, Medium, and High
+	high_tick = roundness_cluster_number
+	# Set ticks and labels for Low and High
 	cb.set_ticks([low_tick, high_tick])
 	cb.set_ticklabels(['Low', 'High'])
 	# cax.remove()
