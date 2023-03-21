@@ -95,7 +95,7 @@ def image_comparison(
 	img2: str,
 	label1: str,
 	label2: str,
-	width_value = 674,
+	width_value = 1169,
 	show_labels: bool=True,
 	starting_position: int=50,
 ) -> components.html:
