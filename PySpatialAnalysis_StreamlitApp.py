@@ -80,7 +80,7 @@ st.markdown("")
 ##########################################################################
 
 # Create a form using the "form" method of Streamlit
-with st.form(key='form1', clear_on_submit=False):
+with st.form(key = 'form1', clear_on_submit = False):
 
 	# Add some text explaining what the user should do next
 	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1000x1000 pixels]')
@@ -102,7 +102,7 @@ with st.form(key='form1', clear_on_submit=False):
 
 	with middle_column:
 
-		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
+		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 2, step = 1, format = '%d')
 
 		area_cluster_number = int(st.session_state['-n_clusters_area_key-'])
 
@@ -272,6 +272,8 @@ with st.form(key='form1', clear_on_submit=False):
 
 		# Remove the 'Region Centroid-0' and 'Region Centroid-1' columns from the DataFrame
 		renamed_dataframe = renamed_dataframe.drop(columns=['Region Centroid-0', 'Region Centroid-1'])
+
+		renamed_dataframe = renamed_dataframe.drop(columns=['axis_major_length', 'axis_minor_length'])
 		
 		# Move the 'Label #' column to the beginning of the DataFrame
 		cols = list(renamed_dataframe.columns)

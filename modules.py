@@ -20,19 +20,14 @@
 
 ##########################################################################
 
+import streamlit as st
+
 from PIL import Image
 import numpy as np
 import cv2
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-# Define custom colormap
-import matplotlib.cm as cm
-which_colormap = cm.get_cmap('tab20c')
-fraction = 0.5
-colors = which_colormap(np.linspace(0, fraction, 256))
-MyColorMap = cm.colors.ListedColormap(colors)
 
 from scipy.stats import gaussian_kde
 from sklearn.cluster import KMeans
@@ -72,6 +67,7 @@ def read_image(filename):
 
 ##########################################################################
 
+@st.cache_resource
 def perform_analysis(rgb_image, threshold_probability):
 	"""
 	Performs object detection on an RGB image using the StarDist2D model.
@@ -133,7 +129,7 @@ def cluster_labels_by_criterion(criterion_list, label_image, n_clusters, n_init=
 
 ##########################################################################
 
-def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, eccentricity_cluster_labels, eccentricity_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 12, DPI = 300, ALPHA = 1):
+def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, eccentricity_cluster_labels, eccentricity_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 	fig, axs = plt.subplot_mosaic([['b', 'c'], ['d', 'e']], figsize=(18, 15), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 	
@@ -152,7 +148,7 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 	######################
 
 	# Display the density map figure
-	im_density = axs['c'].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='Spectral_r')
+	im_density = axs['c'].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['c'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -163,10 +159,11 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 	axs['c'].set_yticks([])
 	# Calculate the tick locations for Low, Medium, and High
 	low_tick = 0
+	med_tick = 0.5
 	high_tick = 1
 	# Set ticks and labels for Low, Medium, and High
-	cb.set_ticks([low_tick, high_tick])
-	cb.set_ticklabels(['Low', 'High'])
+	cb.set_ticks([low_tick, med_tick, high_tick])
+	cb.set_ticklabels(['Low', 'Medium', 'High'])
 
 	######################
 
@@ -174,7 +171,7 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 
 	area_cluster_labels = np.where(area_cluster_labels==0, np.nan, area_cluster_labels)
 
-	im_area_cluster_labels = axs['d'].imshow(area_cluster_labels, alpha=ALPHA, cmap = MyColorMap)
+	im_area_cluster_labels = axs['d'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'Set1')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['d'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -186,11 +183,10 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 	
 	# Calculate the tick locations for Low, Medium, and High
 	low_tick = 1
-	high_tick = eccentricity_cluster_number
-	medium_tick = int((low_tick + high_tick) / 2)
+	high_tick = area_cluster_number
 	# Set ticks and labels for Low, Medium, and High
-	cb.set_ticks([low_tick, medium_tick, high_tick])
-	cb.set_ticklabels(['Low', 'Medium', 'High'])
+	cb.set_ticks([low_tick, high_tick])
+	cb.set_ticklabels(['Low', 'High'])
 	# cax.remove()
 
 	######################
@@ -199,7 +195,7 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 
 	eccentricity_cluster_labels = np.where(eccentricity_cluster_labels==0, np.nan, eccentricity_cluster_labels)
 
-	im_eccentricity_cluster_labels = axs['e'].imshow(eccentricity_cluster_labels, alpha=ALPHA, cmap = MyColorMap)
+	im_eccentricity_cluster_labels = axs['e'].imshow(eccentricity_cluster_labels, alpha=ALPHA, cmap = 'Set1')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['e'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -212,10 +208,9 @@ def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_lab
 	# Calculate the tick locations for Low, Medium, and High
 	low_tick = 1
 	high_tick = eccentricity_cluster_number
-	medium_tick = int((low_tick + high_tick) / 2)
 	# Set ticks and labels for Low, Medium, and High
-	cb.set_ticks([low_tick, medium_tick, high_tick])
-	cb.set_ticklabels(['Low', 'Medium', 'High'])
+	cb.set_ticks([low_tick, high_tick])
+	cb.set_ticklabels(['Low', 'High'])
 	# cax.remove()
 
 	######################
