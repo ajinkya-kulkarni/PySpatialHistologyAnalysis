@@ -199,7 +199,7 @@ with st.form(key = 'form1', clear_on_submit = False):
 
 		roundness = (axis_minor_length / axis_major_length)
 
-		dataframe['roundness'] = roundness
+		dataframe['Roundness'] = roundness
 
 		##############################################################
 
@@ -221,7 +221,7 @@ with st.form(key = 'form1', clear_on_submit = False):
 
 			area_binned_values = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
 
-			roundness_binned_values = bin_property_values(labels, list(dataframe['roundness']), roundness_cluster_number)
+			roundness_binned_values = bin_property_values(labels, list(dataframe['Roundness']), roundness_cluster_number)
 
 			##############################################################
 
