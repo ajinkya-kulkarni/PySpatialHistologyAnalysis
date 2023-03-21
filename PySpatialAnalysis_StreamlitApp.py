@@ -158,7 +158,7 @@ with st.form(key='form1', clear_on_submit=True):
 		# using a function called "image_comparison"
 		# Set parameters for image width, in-memory display, and responsiveness
 
-		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image", show_labels=True, make_responsive=True)
+		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
 
 		# Add a markdown line break
 		st.markdown("")
@@ -218,11 +218,11 @@ with st.form(key='form1', clear_on_submit=True):
 			##############################################################
 
 			# Choose a criterion to cluster the labels on
-			# criterion = 'eccentricity'
-			criterion = 'area'
+			criterion = 'eccentricity'
+			# criterion = 'area'
 
 			# Specify the number of clusters to use for KMeans clustering
-			cluster_number = 5
+			cluster_number = 4
 
 			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
 			criterion_list = list(dataframe[criterion])

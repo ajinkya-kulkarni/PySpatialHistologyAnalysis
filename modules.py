@@ -229,7 +229,7 @@ def convolve(image, kernel):
 
 ##########################################################################
 
-def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 1):
+def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 0.8):
 
 	# Create the figure and axis objects
 	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(15, 12), dpi = DPI)
@@ -262,13 +262,13 @@ def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Loca
 
 	######################
 
-	# Display the clustered blob labels figure
-	# Create a mask where cluster_labels is equal to 0
-	mask = np.where(cluster_labels == 0, np.nan, 1)
-	# Apply the mask to cluster_labels
-	cluster_labels = cluster_labels * mask
-	# Plot the image with NaN regions
-	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='viridis')
+	# # Display the clustered blob labels figure
+	# # Create a mask where cluster_labels is equal to 0
+	# mask = np.where(cluster_labels == 0, np.nan, 1)
+	# # Apply the mask to cluster_labels
+	# cluster_labels = cluster_labels * mask
+	# # Plot the image with NaN regions
+	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='gist_earth')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -282,7 +282,7 @@ def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Loca
 	tick_locs = cb.get_ticks()
 	int_tick_labels = [int(tick) for tick in tick_locs]
 	cb.set_ticklabels(int_tick_labels)
-	cax.remove()
+	# cax.remove()
 
 	######################
 
