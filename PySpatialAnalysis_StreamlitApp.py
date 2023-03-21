@@ -70,7 +70,7 @@ st.set_page_config(
 ##########################################################################
 
 # Set the title of the web app
-st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis, PySAL and StarDist]')
+st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis and StarDist]')
 
 st.caption('For more information, have a look at [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png) and [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/TestImage.png). Source code available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis).', unsafe_allow_html = False)
 
@@ -80,18 +80,21 @@ st.markdown("")
 ##########################################################################
 
 # Create a form using the "form" method of Streamlit
-with st.form(key='form1', clear_on_submit=True):
+with st.form(key='form1', clear_on_submit=False):
 
 	# Add some text explaining what the user should do next
 	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1000x1000 pixels]')
 
 	# Add a file uploader to allow the user to upload an image file
-	uploaded_file = st.file_uploader(
-		"Upload a file",
-		type=["tif", "tiff", "png", "jpg", "jpeg"],
-		accept_multiple_files=False,
-		label_visibility='collapsed'
-	)
+	uploaded_file = st.file_uploader("Upload a file", type=["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files=False, label_visibility='collapsed')
+
+	######################################################################
+
+	# Add a slider to change model aggressiveness
+
+	st.slider('Select degree of aggressivness in isolating nuclei.', min_value = 0.0, max_value = 1.0, value = 0.5, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-AggressivenessKey-')
+
+	ModelAggressiveness = round(float(st.session_state['-AggressivenessKey-']), 1)
 
 	######################################################################
 
@@ -121,7 +124,7 @@ with st.form(key='form1', clear_on_submit=True):
 
 			# Perform instance segmentation analysis on the RGB image to obtain the labels
 			# and detailed information about each label
-			labels, detailed_info = perform_analysis(rgb_image)
+			labels, detailed_info = perform_analysis(rgb_image, ModelAggressiveness)
 
 			##########################################################
 

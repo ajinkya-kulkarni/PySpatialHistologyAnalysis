@@ -65,7 +65,7 @@ def read_image(filename):
 
 ##########################################################################
 
-def perform_analysis(rgb_image):
+def perform_analysis(rgb_image, threshold_probability = 0.5, overlap_threshold = 0.3):
 	"""
 	Performs object detection on an RGB image using the StarDist2D model.
 
@@ -76,11 +76,14 @@ def perform_analysis(rgb_image):
 	numpy.ndarray: The labeled image as a NumPy array.
 	"""
 	try:
+
 		with redirect_stdout(open(os.devnull, "w")) as f:
 
 			model = StarDist2D.from_pretrained('2D_versatile_he')
 
-			labels, detailed_info = model.predict_instances(normalize(rgb_image))
+			# number_of_tiles = model._guess_n_tiles(rgb_image)
+
+			labels, detailed_info = model.predict_instances(normalize(rgb_image), n_tiles = (10, 10, 1),prob_thresh = threshold_probability, nms_thresh = overlap_threshold, show_tile_progress = False)
 
 	except:
 		raise ValueError('Error predicting instances using StarDist2D model')
@@ -229,7 +232,7 @@ def convolve(image, kernel):
 
 ##########################################################################
 
-def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 0.8):
+def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number, SIZE = "3%", PAD = 0.08, title_PAD = 10, DPI = 300, ALPHA = 1):
 
 	# Create the figure and axis objects
 	fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(15, 12), dpi = DPI)
@@ -268,12 +271,18 @@ def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Loca
 	# # Apply the mask to cluster_labels
 	# cluster_labels = cluster_labels * mask
 	# # Plot the image with NaN regions
-	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='gist_earth')
+	im_clusters = axs[1, 0].imshow(cluster_labels, alpha=ALPHA, cmap='viridis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs[1, 0])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_clusters, cax=cax)
-	axs[1, 0].set_title(str(cluster_number - 1) + ' nuclei groups by ' + criterion, pad = title_PAD)
+
+	if criterion == 'eccentricity':
+		criterion_name = 'Roundness'
+	if criterion == 'area':
+		criterion_name = 'Size'
+
+	axs[1, 0].set_title(str(cluster_number - 1) + ' nuclei groups by ' + criterion_name, pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs[1, 0].set_xticks([])
 	axs[1, 0].set_yticks([])
