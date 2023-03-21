@@ -32,7 +32,7 @@ from skimage import measure
 import pandas as pd
 
 import matplotlib.pyplot as plt
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 20})
 
 import sys
 # Don't generate the __pycache__ folder locally
@@ -90,11 +90,29 @@ with st.form(key='form1', clear_on_submit=False):
 
 	######################################################################
 
-	# Add a slider to change model aggressiveness
+	st.markdown("")
 
-	st.slider('Select degree of aggressivness in isolating nuclei.', min_value = 0.0, max_value = 1.0, value = 0.5, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-AggressivenessKey-')
+	left_column, middle_column, right_column = st.columns(3)
 
-	ModelAggressiveness = round(float(st.session_state['-AggressivenessKey-']), 1)
+	with left_column:
+
+		st.number_input('Nuclei detection threshold. 0 implies most nuclei being detected.', key = '-AggressivenessKey-', min_value = 0.1, max_value = 1.0, value = 0.5, step = 0.1, format = '%0.1f')
+
+		ModelAggressiveness = round(float(st.session_state['-AggressivenessKey-']), 1)
+
+	with middle_column:
+
+		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
+
+		area_cluster_number = int(st.session_state['-n_clusters_area_key-'])
+
+	with right_column:
+
+		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_eccentricity_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
+
+		eccentricity_cluster_number= int(st.session_state['-n_clusters_eccentricity_key-'])
+
+	st.markdown("")
 
 	######################################################################
 
@@ -171,46 +189,23 @@ with st.form(key='form1', clear_on_submit=False):
 		# Compute the region properties for each label in the label image
 		# using a function called "measure.regionprops_table"
 		# The properties computed include area, centroid, eccentricity, label, and orientation
-		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'centroid', 'eccentricity','label', 'orientation'))
+		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
 
 		# Create a Pandas DataFrame to store the region properties
 		dataframe = pd.DataFrame(label_properties)
 
-		##############################################################
+		axis_major_length = label_properties['axis_major_length']
+		axis_minor_length = label_properties['axis_minor_length']
 
-		# Extract the centroid coordinates from the DataFrame and convert them to a NumPy array
-		centroids = list(zip(dataframe['centroid-1'], dataframe['centroid-0']))
-		centroids = np.asarray(centroids)
+		eccentricity = axis_minor_length / axis_major_length
+
+		dataframe['eccentricity'] = eccentricity
 
 		##############################################################
 
 		with st.spinner('Creating plots and report...'):
 
-			# Compute a kernel density estimate (KDE) heatmap of the centroid coordinates
-			# using a function called "compute_kde_heatmap"
-			# kde_heatmap = compute_kde_heatmap(centroids, labels)
-
-			##############################################################
-
-			# # Calculate Pairwise Distance Heatmap of Label Centroids
-			# pairwise_distances = plot_neighborhood_analysis(labels)
-
-			##############################################################
-
-			## Calculate heatmap based on labelled image
-
-			# local_kernel_size = int(0.2 * min(modified_labels.shape[0], modified_labels.shape[1]) )
-
-			# if (local_kernel_size % 2 == 0):
-			# 	local_kernel_size = local_kernel_size + 1
-			# if (local_kernel_size < 3):
-			# 	local_kernel_size = 3
-
-			# local_kernel = np.ones((local_kernel_size, local_kernel_size), dtype = np.float32) / (local_kernel_size * local_kernel_size)
-
-			# Local_Density = convolve(modified_labels, local_kernel)
-
-			# Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
+			# Calculate local density
 
 			window_size = int(0.1 * min(modified_labels.shape[0], modified_labels.shape[1]))
 
@@ -221,30 +216,39 @@ with st.form(key='form1', clear_on_submit=False):
 			##############################################################
 
 			# Choose a criterion to cluster the labels on
-			criterion = 'eccentricity'
-			# criterion = 'area'
-
-			# Specify the number of clusters to use for KMeans clustering
-			cluster_number = 4
+			criterion = 'area'
 
 			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
 			criterion_list = list(dataframe[criterion])
 			criterion_list = np.atleast_2d(np.asarray(criterion_list))
 
 			# Cluster the labels based on the chosen criterion using a function called "cluster_labels_by_criterion"
-			cluster_labels = cluster_labels_by_criterion(criterion_list, labels, n_clusters=cluster_number)
+			area_cluster_labels = cluster_labels_by_criterion(criterion_list, labels, area_cluster_number)
+
+			###############
+
+			# Choose a criterion to cluster the labels on
+			criterion = 'eccentricity'
+
+			# Extract the values of the chosen criterion for each label and convert to a 2D NumPy array
+			criterion_list = list(dataframe[criterion])
+			criterion_list = np.atleast_2d(np.asarray(criterion_list))
+
+			# Cluster the labels based on the chosen criterion using a function called "cluster_labels_by_criterion"
+			eccentricity_cluster_labels = cluster_labels_by_criterion(criterion_list, labels, eccentricity_cluster_number)
 
 			##############################################################
 
 			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			# using a function called "make_plots"
-			result_figure = make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, criterion, cluster_labels, cluster_number)
+
+			result_figure = make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, eccentricity_cluster_labels, eccentricity_cluster_number)
 
 			# Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(result_figure)
 
 			# # Save the figure to a file
-			# result_figure.savefig('Result.png', bbox_inches='tight', dpi = 400)
+			# result_figure.savefig('Result.png', bbox_inches='tight')
 			# # Close the figure
 			# plt.close(result_figure)
 
