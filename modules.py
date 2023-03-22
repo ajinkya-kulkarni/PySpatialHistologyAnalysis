@@ -67,7 +67,7 @@ def read_image(filename):
 
 ##########################################################################
 
-@st.cache_resource
+@st.cache_data
 def perform_analysis(rgb_image, threshold_probability):
 	"""
 	Performs object detection on an RGB image using the StarDist2D model.
@@ -89,6 +89,7 @@ def perform_analysis(rgb_image, threshold_probability):
 			labels, detailed_info = model.predict_instances(normalize(rgb_image), n_tiles = (10, 10, 1),prob_thresh = threshold_probability, nms_thresh = 0.3, show_tile_progress = False)
 
 	except:
+
 		raise ValueError('Error predicting instances using StarDist2D model')
 
 	return labels, detailed_info
