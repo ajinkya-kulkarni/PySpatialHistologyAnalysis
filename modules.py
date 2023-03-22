@@ -123,12 +123,25 @@ def bin_property_values(labels, property_values, n_bins):
 
 ##########################################################################
 
-def make_plots(rgb_image, labels, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 	fig, axs = plt.subplot_mosaic([['b', 'c'], ['d', 'e']], figsize=(18, 15), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
-	
+
+	## Display RGB labelled image
+
+	# im = axs['b'].imshow(modified_labels_rgb_image)
+	# # Add a colorbar
+	# divider = make_axes_locatable(axs['b'])
+	# cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	# cb = fig.colorbar(im, cax=cax)
+	# axs['b'].set_title('Segmented Nuclei, N=' + str(len(detailed_info['points'])), pad = title_PAD)
+	# # Turn off axis ticks and labels
+	# axs['b'].set_xticks([])
+	# axs['b'].set_yticks([])
+	# cax.remove()
+
 	# Display labelled image
-	
+
 	im = axs['b'].imshow(labels, cmap = RandomColormap)
 	# Add a colorbar
 	divider = make_axes_locatable(axs['b'])

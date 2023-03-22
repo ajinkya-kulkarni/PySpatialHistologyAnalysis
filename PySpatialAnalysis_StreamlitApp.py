@@ -102,7 +102,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	with middle_column:
 
-		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 2, step = 1, format = '%d')
+		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
 
 		area_cluster_number = int(st.session_state['-n_clusters_area_key-'])
 
@@ -228,13 +228,14 @@ with st.form(key = 'form1', clear_on_submit = True):
 			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			# using a function called "make_plots"
 
-			result_figure = make_plots(rgb_image, labels, detailed_info, Local_Density, area_binned_values, area_cluster_number, roundness_binned_values, roundness_cluster_number)
+			result_figure = make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, area_binned_values, area_cluster_number, roundness_binned_values, roundness_cluster_number)
 
 			# Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(result_figure)
 
 			# # Save the figure to a file
-			# result_figure.savefig('Result.png', bbox_inches='tight')
+			# save_filename = 'Result_' + uploaded_file.name[:-4] + '.png'
+			# result_figure.savefig(save_filename, bbox_inches='tight')
 			# # Close the figure
 			# plt.close(result_figure)
 
