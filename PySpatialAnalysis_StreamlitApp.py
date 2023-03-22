@@ -243,14 +243,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		st.markdown("""---""")
 
 		# Define a mapping of the old column names to the new column names
-		column_mapping = {
-			'area': 'Region Area',
-			'centroid-0': 'Region Centroid-0',
-			'centroid-1': 'Region Centroid-1',
-			'equivalent_diameter': 'Equivalent Diameter',
-			'orientation': 'Orientation',
-			'label': 'Label #'
-		}
+		column_mapping = {'area': 'Region Area', 'centroid-0': 'Region Centroid-0', 'centroid-1': 'Region Centroid-1', 'equivalent_diameter': 'Equivalent Diameter', 'orientation': 'Orientation', 'label': 'Label #'}
 
 		# Rename the columns of the DataFrame using the mapping
 		renamed_dataframe = dataframe.rename(columns=column_mapping)
