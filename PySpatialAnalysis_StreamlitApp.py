@@ -28,6 +28,7 @@ import numpy as np
 from io import BytesIO
 
 from skimage import measure
+from skimage import filters, util
 
 import pandas as pd
 
@@ -209,7 +210,12 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 			window_size = int(0.1 * min(modified_labels.shape[0], modified_labels.shape[1]))
 
-			Local_Density = cv2.blur(modified_labels, (window_size, window_size))
+			Local_Density = cv2.blur(modified_labels, (window_size, window_size), cv2.BORDER_DEFAULT)
+
+			# Apply the mean filter to the input image
+			# modified_labels_temp = modified_labels.copy()
+			# modified_labels_temp = util.img_as_ubyte(modified_labels_temp)
+			# Local_Density = filters.rank.mean(modified_labels_temp, footprint = np.ones((window_size, window_size)))
 
 			Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
 
