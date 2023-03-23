@@ -156,19 +156,9 @@ def mean_filter(labels):
 	# Apply a blur filter to the input array using the calculated window size
 	# This effectively averages the pixel values in a local neighborhood around each pixel
 	Local_Density = cv2.blur(labels, (window_size, window_size), cv2.BORDER_DEFAULT)
-
-	# Normalize the Local_Density array by dividing it by its maximum value
-	# This ensures that the values are between 0 and 1
-	# Use np.full and np.nan to fill in any NaN values in the result of division where the maximum value is 0
-	Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
 	
 	return Local_Density
-
-##########################################################################
-
-
-
-
+	
 ##########################################################################
 
 def bin_property_values(labels, property_values, n_bins):

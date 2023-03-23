@@ -183,9 +183,12 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 			## Calculate local nuclei density
 
-			# Local_Density = compute_density_map(labels)
-
 			Local_Density = mean_filter(labels)
+
+			# Normalize the Local_Density array by dividing it by its maximum value
+			# This ensures that the values are between 0 and 1
+			# Use np.full and np.nan to fill in any NaN values in the result of division where the maximum value is 0
+			Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
 
 			##############################################################
 
