@@ -130,65 +130,24 @@ def colorize_labels(labels):
 
 ##########################################################################
 
-from skimage.util import view_as_windows
-
-def count_nuclei_per_window(labelled_image, window_number = 200):
-	"""
-	Counts the number of nuclei per sliding window of the specified number in a labelled image.
-
-	Parameters:
-	labelled_image (ndarray): A 2D numpy array containing the labelled image, where each nucleus has a unique non-zero label.
-	window_number (int): The number of windows in each direction. Defaults to 20.
-
-	Returns:
-	ndarray: A 2D numpy array containing the number of nuclei per window, normalized by the window size squared.
-	"""
-	rows, cols = labelled_image.shape
-
-	# Calculate the size of each window
-	window_size = int(np.ceil(cols / window_number))
-
-	# Pad the image with zeros to ensure that the window shape is a multiple of the image shape
-	pad_rows = window_size * window_number - rows
-	pad_cols = window_size * window_number - cols
-	labelled_image_padded = np.pad(labelled_image, ((0, pad_rows), (0, pad_cols)), mode='constant', constant_values=0)
-
-	# Create a view of the padded image as a stack of windows
-	window_shape = (window_size, window_size)
-	windows = view_as_windows(labelled_image_padded, window_shape)
-
-	# Count the number of nuclei per window using nested loops
-	nuclei_per_window = np.zeros((window_number, window_number))
-	for i in range(nuclei_per_window.shape[0]):
-		for j in range(nuclei_per_window.shape[1]):
-			window = windows[i, j]
-			nuclei = np.unique(window)
-			nuclei = np.delete(nuclei, np.where(nuclei == 0)) # Remove background label
-			nuclei_per_window[i, j] = len(nuclei) / window_size**2
-
-	# Upscale the result to the size of the input image
-	nuclei_per_image = np.zeros_like(labelled_image, dtype=np.float64)
-	for i in range(window_number):
-		for j in range(window_number):
-			x0 = i * window_size
-			x1 = x0 + window_size
-			y0 = j * window_size
-			y1 = y0 + window_size
-			nuclei_per_image[x0:x1, y0:y1] = nuclei_per_window[i, j]
-
-	return nuclei_per_image
-
-##########################################################################
-
-def calculate_local_density(labels):
+def mean_filter(labels):
 	"""
 	Calculates local density of an input array.
+	# Compute label areas
+	label_areas = np.bincount(label_image.flat)
 
 	Parameters:
 		labels (numpy array): 2D array of labels
+	# Create kernel density estimate of centroids, weighted by label areas
+	weights = label_areas[label_image] / np.sum(label_areas)
+	kde = gaussian_kde(centroids.T, weights=weights)
 
 	Returns:
 		Local_Density (numpy array): 2D array of local density values
+	# Define grid for heatmap
+	shape = label_image.shape
+	x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]))
+	grid_coords = np.vstack([x.ravel(), y.ravel()])
 
 	"""
 	# Calculate window size as 10% of the minimum dimension of the input array
@@ -204,6 +163,11 @@ def calculate_local_density(labels):
 	Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
 	
 	return Local_Density
+
+##########################################################################
+
+
+
 
 ##########################################################################
 
@@ -234,7 +198,7 @@ def bin_property_values(labels, property_values, n_bins):
 
 ##########################################################################
 
-def make_plots(modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 	fig, axs = plt.subplot_mosaic([['b', 'c'], ['d', 'e']], figsize=(18, 15), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
@@ -245,7 +209,7 @@ def make_plots(modified_labels_rgb_image, detailed_info, Local_Density, area_clu
 	divider = make_axes_locatable(axs['b'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im, cax=cax)
-	axs['b'].set_title(str(len(detailed_info['points'])) + ' segmented Nuclei', pad = title_PAD)
+	axs['b'].set_title(str(len(detailed_info['points'])) + ' segmented Nuclei, with σ=' + str(ModelSensitivity), pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['b'].set_xticks([])
 	axs['b'].set_yticks([])
@@ -324,6 +288,176 @@ def make_plots(modified_labels_rgb_image, detailed_info, Local_Density, area_clu
 
 ##########################################################################
 
-def run_test():
+import streamlit.components.v1 as components
+import base64
+import io
+from typing import Union, Tuple
+import requests
+from PIL import Image
+import numpy as np
 
-	pass
+def read_image_and_convert_to_base64(image: Union[Image.Image, str, np.ndarray]) -> Tuple[str, int, int]:
+	"""
+	Reads an image in PIL Image, file path, or numpy array format and returns a base64-encoded string of the image
+	in JPEG format, along with its width and height.
+
+	Args:
+		image: An image in PIL Image, file path, or numpy array format.
+
+	Returns:
+		A tuple containing:
+		- base64_src (str): A base64-encoded string of the image in JPEG format.
+		- width (int): The width of the image in pixels.
+		- height (int): The height of the image in pixels.
+
+	Raises:
+		TypeError: If the input image is not of a recognized type.
+
+	Assumes:
+		This function assumes that the input image is a valid image in PIL Image, file path, or numpy array format.
+		It also assumes that the necessary libraries such as Pillow and scikit-image are installed.
+
+	"""
+	# Set the maximum image size to None to allow reading of large images
+	Image.MAX_IMAGE_PIXELS = None
+
+	# If input image is PIL Image, convert it to RGB format
+	if isinstance(image, Image.Image):
+		image_pil = image.convert('RGB')
+
+	# If input image is a file path, open it using requests library if it's a URL, otherwise use PIL Image's open function
+	elif isinstance(image, str):
+		try:
+			image_pil = Image.open(
+				requests.get(image, stream=True).raw if str(image).startswith("http") else image
+			).convert("RGB")
+		except:
+			# If opening image using requests library fails, try to use scikit-image library to read the image
+			try:
+				import skimage.io
+			except ImportError:
+				raise ImportError("Please run 'pip install -U scikit-image imagecodecs' for large image handling.")
+
+			# Read the image using scikit-image and convert it to a PIL Image
+			image_sk = skimage.io.imread(image).astype(np.uint8)
+			if len(image_sk.shape) == 2:
+				image_pil = Image.fromarray(image_sk, mode="1").convert("RGB")
+			elif image_sk.shape[2] == 4:
+				image_pil = Image.fromarray(image_sk, mode="RGBA").convert("RGB")
+			elif image_sk.shape[2] == 3:
+				image_pil = Image.fromarray(image_sk, mode="RGB")
+			else:
+				raise TypeError(f"image with shape: {image_sk.shape[3]} is not supported.")
+
+	# If input image is a numpy array, create a PIL Image from it
+	elif isinstance(image, np.ndarray):
+		if image.shape[0] < 5:
+			image = image[:, :, ::-1]
+		image_pil = Image.fromarray(image).convert("RGB")
+
+	# If input image is not of a recognized type, raise a TypeError
+	else:
+		raise TypeError("read image with 'pillow' using 'Image.open()'")
+
+	# Get the width and height of the image
+	width, height = image_pil.size
+
+	# Save the PIL Image as a JPEG image with maximum quality (100) and no subsampling
+	in_mem_file = io.BytesIO()
+	image_pil.save(in_mem_file, format="JPEG", subsampling=0, quality=100)
+
+	# Encode the bytes of the JPEG image in base64 format
+	img_bytes = in_mem_file.getvalue()
+	image_str = base64.b64encode(img_bytes).decode("utf-8")
+
+	# Create a base64-encoded string of the image in JPEG format
+	base64_src = f"data:image/jpg;base64,{image_str}"
+
+	# Return the base64-encoded string along with the width and height of the image
+	return base64_src, width, height
+
+######################################################
+
+def image_comparison(
+	img1: str,
+	img2: str,
+	label1: str,
+	label2: str,
+	width_value = 674,
+	show_labels: bool=True,
+	starting_position: int=50,
+) -> components.html:
+	"""
+	Creates an HTML block containing an image comparison slider of two images.
+
+	Args:
+		img1 (str): A string representing the path or URL of the first image to be compared.
+		img2 (str): A string representing the path or URL of the second image to be compared.
+		label1 (str): A label to be displayed above the first image in the slider.
+		label2 (str): A label to be displayed above the second image in the slider.
+		width_value (int, optional): The maximum width of the slider in pixels. Defaults to 500.
+		show_labels (bool, optional): Whether to show the labels above the images in the slider. Defaults to True.
+		starting_position (int, optional): The starting position of the slider. Defaults to 50.
+
+	Returns:
+		A Dash HTML component that displays an image comparison slider.
+
+	"""
+		# Convert the input images to base64 format
+	img1_base64, img1_width, img1_height = read_image_and_convert_to_base64(img1)
+	img2_base64, img2_width, img2_height = read_image_and_convert_to_base64(img2)
+
+	# Get the maximum width and height of the input images
+	img_width = int(max(img1_width, img2_width))
+	img_height = int(max(img1_height, img2_height))
+
+	# Calculate the aspect ratio of the images
+	h_to_w = img_height / img_width
+
+	# Determine the height of the slider based on the width and aspect ratio
+	if img_width < width_value:
+		width = img_width
+	else:
+		width = width_value
+	height = int(width * h_to_w)
+
+	# Load CSS and JS for the slider
+	cdn_path = "https://cdn.knightlab.com/libs/juxtapose/latest"
+	css_block = f'<link rel="stylesheet" href="{cdn_path}/css/juxtapose.css">'
+	js_block = f'<script src="{cdn_path}/js/juxtapose.min.js"></script>'
+
+	# Create the HTML code for the slider
+	htmlcode = f"""
+		<style>body {{ margin: unset; }}</style>
+		{css_block}
+		{js_block}
+		<div id="foo" style="height: {height}; width: {width};"></div>
+		<script>
+		slider = new juxtapose.JXSlider('#foo',
+			[
+				{{
+					src: '{img1_base64}',
+					label: '{label1}',
+				}},
+				{{
+					src: '{img2_base64}',
+					label: '{label2}',
+				}}
+			],
+			{{
+				animate: true,
+				showLabels: {str(show_labels).lower()},
+				showCredits: true,
+				startingPosition: "{starting_position}%",
+				makeResponsive: true,
+			}});
+		</script>
+		"""
+
+	# Create a Dash HTML component from the HTML code
+	static_component = components.html(htmlcode, height=height, width=width)
+
+	return static_component
+
+##########################################################################
+

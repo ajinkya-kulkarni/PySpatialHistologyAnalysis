@@ -37,7 +37,6 @@ sys.tracebacklimit = 0
 ##########################################################################
 
 from modules import *
-from static_component import *
 
 ##########################################################################
 
@@ -90,9 +89,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	with left_column:
 
-		st.number_input('Sensitivity for Nuclei detection. Higher values detect lesser Nuclei.', key = '-SensitivityKey-', min_value = 0.1, max_value = 0.9, value = 0.5, step = 0.1, format = '%0.1f')
+		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.3, step = 0.05, format = '%0.2f', label_visibility = "visible", key = '-SensitivityKey-')
 
-		ModelSensitivity = round(float(st.session_state['-SensitivityKey-']), 1)
+		ModelSensitivity = round(float(st.session_state['-SensitivityKey-']), 2)
 
 	with middle_column:
 
@@ -184,11 +183,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 			## Calculate local nuclei density
 
-			# nuclei_density = count_nuclei_per_window(labels)
-			# nuclei_density = nuclei_density / nuclei_density.max()
-			# Local_Density = nuclei_density.copy()
+			# Local_Density = compute_density_map(labels)
 
-			Local_Density = calculate_local_density(labels)
+			Local_Density = mean_filter(labels)
 
 			##############################################################
 
@@ -205,7 +202,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 			## Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 			## using a function called "make_plots"
 
-			result_figure = make_plots(modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
+			result_figure = make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
 
 			## Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(result_figure)
@@ -248,5 +245,19 @@ with st.form(key = 'form1', clear_on_submit = True):
 		##################################################################
 
 		st.stop()
+
+		@st.cache
+		def convert_df(df):
+			# IMPORTANT: Cache the conversion to prevent computation on every rerun
+			return df.to_csv().encode('utf-8')
+
+		csv = convert_df(renamed_dataframe)
+
+		st.download_button(
+			label="Download data as CSV",
+			data=csv,
+			file_name='large_df.csv',
+			mime='text/csv',
+		)
 
 ##########################################################################
