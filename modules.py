@@ -29,11 +29,6 @@ import cv2
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from scipy.stats import gaussian_kde
-from sklearn.cluster import KMeans
-from scipy.spatial.distance import pdist, squareform
-from scipy import signal
-
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -41,8 +36,6 @@ from contextlib import redirect_stdout
 
 from stardist.models import StarDist2D
 from csbdeep.utils import normalize
-from stardist import random_label_cmap
-RandomColormap = random_label_cmap()
 
 ##########################################################################
 
@@ -96,6 +89,124 @@ def perform_analysis(rgb_image, threshold_probability):
 
 ##########################################################################
 
+def colorize_labels(labels):
+	"""
+	Takes a grayscale label image and colorizes each label with a random RGB color,
+	except for the background label which is left as black. Returns the colorized RGB
+	image.
+
+	Parameters
+	----------
+	labels : numpy.ndarray
+		A grayscale label image where each pixel has an integer value corresponding to
+		its label. The background label should have a value of 0.
+
+	Returns
+	-------
+	numpy.ndarray
+		An RGB image where each label in the input image is colored with a random RGB
+		color, except for the background label which is left as black.
+	"""
+
+	# Generate a random RGB color for each label
+	num_labels = len(np.unique(labels))
+	colors = np.random.randint(0, 256, (num_labels, 3))
+
+	# Create a blank RGB image
+	h, w = labels.shape
+	modified_labels_rgb_image = np.zeros((h, w, 3), dtype=np.uint8)
+
+	# Color each label with its random color
+	for label in np.unique(labels):
+		if label == 0:
+			# Background label - leave as black
+			continue
+		else:
+			# Random color for non-background labels
+			color = tuple(colors[label - 1])
+			modified_labels_rgb_image[labels == label] = color
+	
+	return modified_labels_rgb_image
+
+##########################################################################
+
+from skimage.util import view_as_windows
+
+def count_nuclei_per_window(labelled_image, window_number = 200):
+	"""
+	Counts the number of nuclei per sliding window of the specified number in a labelled image.
+
+	Parameters:
+	labelled_image (ndarray): A 2D numpy array containing the labelled image, where each nucleus has a unique non-zero label.
+	window_number (int): The number of windows in each direction. Defaults to 20.
+
+	Returns:
+	ndarray: A 2D numpy array containing the number of nuclei per window, normalized by the window size squared.
+	"""
+	rows, cols = labelled_image.shape
+
+	# Calculate the size of each window
+	window_size = int(np.ceil(cols / window_number))
+
+	# Pad the image with zeros to ensure that the window shape is a multiple of the image shape
+	pad_rows = window_size * window_number - rows
+	pad_cols = window_size * window_number - cols
+	labelled_image_padded = np.pad(labelled_image, ((0, pad_rows), (0, pad_cols)), mode='constant', constant_values=0)
+
+	# Create a view of the padded image as a stack of windows
+	window_shape = (window_size, window_size)
+	windows = view_as_windows(labelled_image_padded, window_shape)
+
+	# Count the number of nuclei per window using nested loops
+	nuclei_per_window = np.zeros((window_number, window_number))
+	for i in range(nuclei_per_window.shape[0]):
+		for j in range(nuclei_per_window.shape[1]):
+			window = windows[i, j]
+			nuclei = np.unique(window)
+			nuclei = np.delete(nuclei, np.where(nuclei == 0)) # Remove background label
+			nuclei_per_window[i, j] = len(nuclei) / window_size**2
+
+	# Upscale the result to the size of the input image
+	nuclei_per_image = np.zeros_like(labelled_image, dtype=np.float64)
+	for i in range(window_number):
+		for j in range(window_number):
+			x0 = i * window_size
+			x1 = x0 + window_size
+			y0 = j * window_size
+			y1 = y0 + window_size
+			nuclei_per_image[x0:x1, y0:y1] = nuclei_per_window[i, j]
+
+	return nuclei_per_image
+
+##########################################################################
+
+def calculate_local_density(labels):
+	"""
+	Calculates local density of an input array.
+
+	Parameters:
+		labels (numpy array): 2D array of labels
+
+	Returns:
+		Local_Density (numpy array): 2D array of local density values
+
+	"""
+	# Calculate window size as 10% of the minimum dimension of the input array
+	window_size = int(0.1 * min(labels.shape[0], labels.shape[1]))
+
+	# Apply a blur filter to the input array using the calculated window size
+	# This effectively averages the pixel values in a local neighborhood around each pixel
+	Local_Density = cv2.blur(labels, (window_size, window_size), cv2.BORDER_DEFAULT)
+
+	# Normalize the Local_Density array by dividing it by its maximum value
+	# This ensures that the values are between 0 and 1
+	# Use np.full and np.nan to fill in any NaN values in the result of division where the maximum value is 0
+	Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
+	
+	return Local_Density
+
+##########################################################################
+
 def bin_property_values(labels, property_values, n_bins):
 	"""
 	Bin the property values into n_bins equally spaced bins and assign the binned values to each label.
@@ -123,31 +234,18 @@ def bin_property_values(labels, property_values, n_bins):
 
 ##########################################################################
 
-def make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_plots(modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 	fig, axs = plt.subplot_mosaic([['b', 'c'], ['d', 'e']], figsize=(18, 15), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
 	## Display RGB labelled image
 
-	# im = axs['b'].imshow(modified_labels_rgb_image)
-	# # Add a colorbar
-	# divider = make_axes_locatable(axs['b'])
-	# cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	# cb = fig.colorbar(im, cax=cax)
-	# axs['b'].set_title('Segmented Nuclei, N=' + str(len(detailed_info['points'])), pad = title_PAD)
-	# # Turn off axis ticks and labels
-	# axs['b'].set_xticks([])
-	# axs['b'].set_yticks([])
-	# cax.remove()
-
-	# Display labelled image
-
-	im = axs['b'].imshow(labels, cmap = RandomColormap)
+	im = axs['b'].imshow(modified_labels_rgb_image)
 	# Add a colorbar
 	divider = make_axes_locatable(axs['b'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im, cax=cax)
-	axs['b'].set_title('Segmented Nuclei, N=' + str(len(detailed_info['points'])), pad = title_PAD)
+	axs['b'].set_title(str(len(detailed_info['points'])) + ' segmented Nuclei', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['b'].set_xticks([])
 	axs['b'].set_yticks([])

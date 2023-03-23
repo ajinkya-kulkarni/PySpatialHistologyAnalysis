@@ -21,17 +21,10 @@
 ##########################################################################
 
 import streamlit as st
-import cv2
-
-from PIL import Image
 import numpy as np
 from io import BytesIO
-
 from skimage import measure
-from skimage import filters, util
-
 import pandas as pd
-
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 20})
 
@@ -81,7 +74,7 @@ st.markdown("")
 ##########################################################################
 
 # Create a form using the "form" method of Streamlit
-with st.form(key = 'form1', clear_on_submit = True):
+with st.form(key = 'form1', clear_on_submit = False):
 
 	# Add some text explaining what the user should do next
 	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1000x1000 pixels]')
@@ -97,9 +90,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	with left_column:
 
-		st.number_input('Nuclei detection threshold. 0 implies most nuclei being detected.', key = '-AggressivenessKey-', min_value = 0.1, max_value = 1.0, value = 0.5, step = 0.1, format = '%0.1f')
+		st.number_input('Sensitivity for Nuclei detection. Higher values detect lesser Nuclei.', key = '-SensitivityKey-', min_value = 0.1, max_value = 0.9, value = 0.5, step = 0.1, format = '%0.1f')
 
-		ModelAggressiveness = round(float(st.session_state['-AggressivenessKey-']), 1)
+		ModelSensitivity = round(float(st.session_state['-SensitivityKey-']), 1)
 
 	with middle_column:
 
@@ -143,100 +136,78 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 			# Perform instance segmentation analysis on the RGB image to obtain the labels
 			# and detailed information about each label
-			labels, detailed_info = perform_analysis(rgb_image, ModelAggressiveness)
+			labels, detailed_info = perform_analysis(rgb_image, ModelSensitivity)
 
 			##########################################################
 
-			# Convert the label image to a binary image where non-zero pixels are set to 255
-			modified_labels = np.where(labels > 0, 255, labels)
+			# Make RGB image from labels image
 
-			##########################################################
-
-			# Create an RGB image with the same dimensions as the modified label image
-			# with all pixels set to white
-			modified_labels_rgb_image = 255 * np.ones((*modified_labels.shape, 3), dtype=np.uint8)
-
-			##########################################################
-
-			# Replace black (255) pixels in the modified label image with a custom blue color
-			black_pixels = np.where(modified_labels == 255)
-			modified_labels_rgb_image[black_pixels[0], black_pixels[1], :] = (31, 119, 180)
-
-			# Replace white (0) pixels in the modified label image with a custom RGB color
-			white_pixels = np.where(modified_labels == 0)
-			modified_labels_rgb_image[white_pixels[0], white_pixels[1], :] = (247, 234, 199)
-
-		##############################################################
-
-		# Check that each label is a unique integer
-		unique_labels = np.unique(labels)
-		num_labels = len(unique_labels) - 1  # subtract 1 to exclude the background label
-		if num_labels != labels.max():
-			raise Exception('Each blob does not have a unique integer assigned to it.')
-
-		##############################################################
-
-		# Compare the uploaded RGB image with the modified label image
-		# using a function called "image_comparison"
-		# Set parameters for image width, in-memory display, and responsiveness
-
-		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
-
-		# Add a markdown line break
-		st.markdown("")
-
-		##############################################################
-
-		# Compute the region properties for each label in the label image
-		# using a function called "measure.regionprops_table"
-		# The properties computed include area, centroid, label, and orientation
-		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
-
-		# Create a Pandas DataFrame to store the region properties
-		dataframe = pd.DataFrame(label_properties)
-
-		axis_major_length = label_properties['axis_major_length']
-		axis_minor_length = label_properties['axis_minor_length']
-
-		roundness = (axis_minor_length / axis_major_length)
-
-		dataframe['Roundness'] = roundness
-
-		##############################################################
-
-		with st.spinner('Creating plots and report...'):
-
-			# Calculate local density
-
-			window_size = int(0.1 * min(modified_labels.shape[0], modified_labels.shape[1]))
-
-			Local_Density = cv2.blur(modified_labels, (window_size, window_size), cv2.BORDER_DEFAULT)
-
-			# Apply the mean filter to the input image
-			# modified_labels_temp = modified_labels.copy()
-			# modified_labels_temp = util.img_as_ubyte(modified_labels_temp)
-			# Local_Density = filters.rank.mean(modified_labels_temp, footprint = np.ones((window_size, window_size)))
-
-			Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
+			modified_labels_rgb_image = colorize_labels(labels)
 
 			##############################################################
 
-			# Perform binning of data into clusters
+			# Check that each label is a unique integer
+			unique_labels = np.unique(labels)
+			num_labels = len(unique_labels) - 1  # subtract 1 to exclude the background label
+			if num_labels != labels.max():
+				raise Exception('Each blob does not have a unique integer assigned to it.')
+
+			##############################################################
+
+			# Compare the uploaded RGB image with the modified label image
+			# using a function called "image_comparison"
+			# Set parameters for image width, in-memory display, and responsiveness
+
+			image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
+
+			# Add a markdown line break
+			st.markdown("")
+
+			##############################################################
+
+			# Compute the region properties for each label in the label image
+			# using a function called "measure.regionprops_table"
+			# The properties computed include area, centroid, label, and orientation
+			label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
+
+			# Create a Pandas DataFrame to store the region properties
+			dataframe = pd.DataFrame(label_properties)
+
+			axis_major_length = label_properties['axis_major_length']
+			axis_minor_length = label_properties['axis_minor_length']
+
+			roundness = (axis_minor_length / axis_major_length)
+
+			dataframe['Roundness'] = roundness
+
+			##############################################################
+
+			## Calculate local nuclei density
+
+			# nuclei_density = count_nuclei_per_window(labels)
+			# nuclei_density = nuclei_density / nuclei_density.max()
+			# Local_Density = nuclei_density.copy()
+
+			Local_Density = calculate_local_density(labels)
+
+			##############################################################
+
+			## Perform binning of data into clusters
 
 			label_list = list(dataframe['label'])
 
-			area_binned_values = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
+			area_cluster_labels = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
 
-			roundness_binned_values = bin_property_values(labels, list(dataframe['Roundness']), roundness_cluster_number)
+			roundness_cluster_labels = bin_property_values(labels, list(dataframe['Roundness']), roundness_cluster_number)
 
 			##############################################################
 
-			# Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
-			# using a function called "make_plots"
+			## Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
+			## using a function called "make_plots"
 
-			result_figure = make_plots(rgb_image, labels, detailed_info, modified_labels_rgb_image, Local_Density, area_binned_values, area_cluster_number, roundness_binned_values, roundness_cluster_number)
+			result_figure = make_plots(modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
 
-			# Display the figure using Streamlit's "st.pyplot" function
+			## Display the figure using Streamlit's "st.pyplot" function
 			st.pyplot(result_figure)
 
 			# # Save the figure to a file

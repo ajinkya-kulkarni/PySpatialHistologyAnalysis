@@ -4,8 +4,6 @@ numpy
 tensorflow-cpu
 Pillow
 stardist
-scipy
 pandas
 matplotlib
 scikit-image
-scikit-learn
