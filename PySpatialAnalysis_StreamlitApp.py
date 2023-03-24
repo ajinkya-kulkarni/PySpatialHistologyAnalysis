@@ -21,10 +21,14 @@
 ##########################################################################
 
 import streamlit as st
+
 import numpy as np
 from io import BytesIO
 from skimage import measure
 import pandas as pd
+
+import time
+
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 20})
 
@@ -122,99 +126,133 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	if submitted:
 
+		st.markdown("")
+
+		ProgressBarText = st.empty()
+		ProgressBarText.caption("Analyzing uploaded image...")
+		ProgressBar = st.progress(0)
+		ProgressBarTime = 0.1
+
+		# Read in the RGB image from an uploaded file
+		rgb_image = read_image(uploaded_file)
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(1/7))
+
+		##########################################################
+
+		# Perform instance segmentation analysis on the RGB image to obtain the labels
+		# and detailed information about each label
+		labels, detailed_info = perform_analysis(rgb_image, ModelSensitivity)
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(2/7))
+
+		##########################################################
+
+		# Make RGB image from labels image
+
+		modified_labels_rgb_image = colorize_labels(labels)
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(3/7))
+
+		##############################################################
+
+		# Check that each label is a unique integer
+		unique_labels = np.unique(labels)
+		num_labels = len(unique_labels) - 1  # subtract 1 to exclude the background label
+		if num_labels != labels.max():
+			raise Exception('Each blob does not have a unique integer assigned to it.')
+
+		##############################################################
+
+		# Compute the region properties for each label in the label image
+		# using a function called "measure.regionprops_table"
+		# The properties computed include area, centroid, label, and orientation
+		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
+
+		# Create a Pandas DataFrame to store the region properties
+		dataframe = pd.DataFrame(label_properties)
+
+		axis_major_length = label_properties['axis_major_length']
+		axis_minor_length = label_properties['axis_minor_length']
+
+		roundness = (axis_minor_length / axis_major_length)
+
+		dataframe['Roundness'] = roundness
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(4/7))
+
+		##############################################################
+
+		## Calculate local nuclei density
+
+		Local_Density_mean_filter = mean_filter(labels)
+
+		Local_Density_mean_filter = normalize_density_maps(Local_Density_mean_filter)
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(5/7))
+
+		######
+
+		Local_Density_KDE = weighted_kde_density_map(labels, num_points = 1000)
+		
+		Local_Density_KDE = normalize_density_maps(Local_Density_KDE)
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(6/7))
+
+		##############################################################
+
+		## Perform binning of data into clusters
+
+		label_list = list(dataframe['label'])
+
+		area_cluster_labels = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
+
+		roundness_cluster_labels = bin_property_values(labels, list(dataframe['Roundness']), roundness_cluster_number)
+
+		time.sleep(ProgressBarTime)
+		ProgressBar.progress(float(7/7))
+
+		ProgressBarText.empty()
+		ProgressBar.empty()
+
+		##############################################################
+
 		st.markdown("""---""")
 
 		st.markdown("Results")
 
-		with st.spinner('Analyzing uploaded image...'):
+		##############################################################
 
-			# Read in the RGB image from an uploaded file
-			rgb_image = read_image(uploaded_file)
+		# Compare the uploaded RGB image with the modified label image
+		# using a function called "image_comparison"
+		# Set parameters for image width, in-memory display, and responsiveness
 
-			##########################################################
+		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
 
-			# Perform instance segmentation analysis on the RGB image to obtain the labels
-			# and detailed information about each label
-			labels, detailed_info = perform_analysis(rgb_image, ModelSensitivity)
+		# Add a markdown line break
+		st.markdown("")
 
-			##########################################################
+		##############################################################
 
-			# Make RGB image from labels image
+		## Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
+		## using a function called "make_plots"
 
-			modified_labels_rgb_image = colorize_labels(labels)
+		result_figure = make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
 
-			##############################################################
+		## Display the figure using Streamlit's "st.pyplot" function
+		st.pyplot(result_figure)
 
-			# Check that each label is a unique integer
-			unique_labels = np.unique(labels)
-			num_labels = len(unique_labels) - 1  # subtract 1 to exclude the background label
-			if num_labels != labels.max():
-				raise Exception('Each blob does not have a unique integer assigned to it.')
-
-			##############################################################
-
-			# Compare the uploaded RGB image with the modified label image
-			# using a function called "image_comparison"
-			# Set parameters for image width, in-memory display, and responsiveness
-
-			image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
-
-			# Add a markdown line break
-			st.markdown("")
-
-			##############################################################
-
-			# Compute the region properties for each label in the label image
-			# using a function called "measure.regionprops_table"
-			# The properties computed include area, centroid, label, and orientation
-			label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
-
-			# Create a Pandas DataFrame to store the region properties
-			dataframe = pd.DataFrame(label_properties)
-
-			axis_major_length = label_properties['axis_major_length']
-			axis_minor_length = label_properties['axis_minor_length']
-
-			roundness = (axis_minor_length / axis_major_length)
-
-			dataframe['Roundness'] = roundness
-
-			##############################################################
-
-			## Calculate local nuclei density
-
-			Local_Density = mean_filter(labels)
-
-			# Normalize the Local_Density array by dividing it by its maximum value
-			# This ensures that the values are between 0 and 1
-			# Use np.full and np.nan to fill in any NaN values in the result of division where the maximum value is 0
-			Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
-
-			##############################################################
-
-			## Perform binning of data into clusters
-
-			label_list = list(dataframe['label'])
-
-			area_cluster_labels = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
-
-			roundness_cluster_labels = bin_property_values(labels, list(dataframe['Roundness']), roundness_cluster_number)
-
-			##############################################################
-
-			## Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
-			## using a function called "make_plots"
-
-			result_figure = make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
-
-			## Display the figure using Streamlit's "st.pyplot" function
-			st.pyplot(result_figure)
-
-			# # Save the figure to a file
-			# save_filename = 'Result_' + uploaded_file.name[:-4] + '.png'
-			# result_figure.savefig(save_filename, bbox_inches='tight')
-			# # Close the figure
-			# plt.close(result_figure)
+		# # Save the figure to a file
+		# save_filename = 'Result_' + uploaded_file.name[:-4] + '.png'
+		# result_figure.savefig(save_filename, bbox_inches='tight')
+		# # Close the figure
+		# plt.close(result_figure)
 
 		##################################################################
 

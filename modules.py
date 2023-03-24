@@ -26,6 +26,9 @@ from PIL import Image
 import numpy as np
 import cv2
 
+from skimage.measure import regionprops
+from sklearn.neighbors import KernelDensity
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -130,6 +133,61 @@ def colorize_labels(labels):
 
 ##########################################################################
 
+def weighted_kde_density_map(nucleus_mask, bandwidth='auto', kernel='gaussian', num_points = 500):
+	"""
+	Compute the weighted kernel density estimate (KDE) of the centroids of regions in a binary image.
+	
+	Parameters:
+		nucleus_mask (ndarray): Binary image of nuclei, with 1's indicating nuclei and 0's indicating background.
+		bandwidth (float or str, optional): The bandwidth of the KDE. If 'auto', use the rule of thumb bandwidth. Default is 'auto'.
+		kernel (str, optional): The kernel function to use. Default is 'gaussian'.
+		num_points (int, optional): The number of points to use in the density map. Default is 500.
+		
+	Returns:
+		density_map (ndarray): The density map of the centroids of the nuclei.
+	"""
+	# Extract centroid locations and areas of each nucleus
+	regions = regionprops(nucleus_mask)
+	nucleus_centroids = np.array([region.centroid for region in regions])
+	nucleus_areas = np.array([region.area for region in regions])
+
+	# Compute the weighted KDE
+	if bandwidth == 'auto':
+		# Use the rule of thumb bandwidth selection
+		num_nuclei = nucleus_centroids.shape[0]
+		num_dimensions = nucleus_centroids.shape[1]
+		bandwidth = num_nuclei**(-1.0/(num_dimensions+4)) * np.std(nucleus_centroids, axis=0).mean()
+
+		# make bandwidth more refined than the calculated amount.
+		bandwidth = float(0.5 * bandwidth)
+		
+	else:
+		bandwidth = float(bandwidth)  # Ensure bandwidth is a float
+	
+	kde = KernelDensity(kernel=kernel, bandwidth=bandwidth).fit(nucleus_centroids, sample_weight=nucleus_areas)
+
+	# Compute the size of the grid for the density map based on the desired number of points
+	num_steps_x = int(np.ceil(np.sqrt(num_points * nucleus_mask.shape[1] / nucleus_mask.shape[0])))
+	num_steps_y = int(np.ceil(np.sqrt(num_points * nucleus_mask.shape[0] / nucleus_mask.shape[1])))
+	x_step_size = int(np.ceil(nucleus_mask.shape[1] / num_steps_x))
+	y_step_size = int(np.ceil(nucleus_mask.shape[0] / num_steps_y))
+
+	# Create a density map
+	x_steps = int(np.ceil(nucleus_mask.shape[1] / x_step_size))
+	y_steps = int(np.ceil(nucleus_mask.shape[0] / y_step_size))
+	x_coords = np.arange(0, x_steps * x_step_size, x_step_size)
+	y_coords = np.arange(0, y_steps * y_step_size, y_step_size)
+	xx, yy = np.meshgrid(x_coords, y_coords)
+
+	# Evaluate the KDE at each point in the grid to create the density map
+	grid_points = np.vstack([yy.ravel(), xx.ravel()]).T
+	density = np.exp(kde.score_samples(grid_points))
+	density_map = density.reshape((y_steps, x_steps))
+
+	return density_map
+
+##########################################################################
+
 def mean_filter(labels):
 	"""
 	Calculates local density of an input array.
@@ -161,6 +219,14 @@ def mean_filter(labels):
 	
 ##########################################################################
 
+def normalize_density_maps(Local_Density):
+
+	Normalized_Local_Density = np.divide(Local_Density, Local_Density.max(), out=np.full(Local_Density.shape, np.nan), where=Local_Density.max() != 0)
+
+	return Normalized_Local_Density
+
+##########################################################################
+
 def bin_property_values(labels, property_values, n_bins):
 	"""
 	Bin the property values into n_bins equally spaced bins and assign the binned values to each label.
@@ -188,9 +254,24 @@ def bin_property_values(labels, property_values, n_bins):
 
 ##########################################################################
 
-def make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
-	fig, axs = plt.subplot_mosaic([['b', 'c'], ['d', 'e']], figsize=(18, 15), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
+	fig, axs = plt.subplot_mosaic([['a', 'b'], ['c', 'd'], ['e', 'f']], figsize=(20, 30), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
+
+	## Display RGB labelled image
+
+	im = axs['a'].imshow(rgb_image)
+	# Add a colorbar
+	divider = make_axes_locatable(axs['a'])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im, cax=cax)
+	axs['a'].set_title('H&E Image', pad = title_PAD)
+	# Turn off axis ticks and labels
+	axs['a'].set_xticks([])
+	axs['a'].set_yticks([])
+	cax.remove()
+
+	######################
 
 	## Display RGB labelled image
 
@@ -209,12 +290,12 @@ def make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local
 
 	# Display the density map figure
 
-	im_density = axs['c'].imshow(Local_Density, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='viridis')
+	im_density = axs['c'].imshow(Local_Density_mean_filter, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='cividis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['c'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_density, cax=cax)
-	axs['c'].set_title('Local Nuclei Density', pad = title_PAD)
+	axs['c'].set_title('Nuclei density', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['c'].set_xticks([])
 	axs['c'].set_yticks([])
@@ -227,17 +308,37 @@ def make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local
 
 	######################
 
-	# # Display the area clustered blob labels figure
+	# Display the density map figure
 
-	im_area_cluster_labels = axs['d'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'brg')
+	im_density = axs['d'].imshow(Local_Density_KDE, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='cividis')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['d'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
-	cb = fig.colorbar(im_area_cluster_labels, cax=cax)
-	axs['d'].set_title(str(area_cluster_number) + ' nuclei groups by Area', pad = title_PAD)
+	cb = fig.colorbar(im_density, cax=cax)
+	axs['d'].set_title('Nuclei packing', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['d'].set_xticks([])
 	axs['d'].set_yticks([])
+	# Calculate the tick locations for Low, Medium, and High
+	low_tick = 0
+	high_tick = 1
+	# Set ticks and labels for Low, Medium, and High
+	cb.set_ticks([low_tick, high_tick])
+	cb.set_ticklabels(['Low', 'High'])
+
+	######################
+
+	# # Display the area clustered blob labels figure
+
+	im_area_cluster_labels = axs['e'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'brg')
+	# Add a colorbar
+	divider = make_axes_locatable(axs['e'])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im_area_cluster_labels, cax=cax)
+	axs['e'].set_title(str(area_cluster_number) + ' nuclei groups by Area', pad = title_PAD)
+	# Turn off axis ticks and labels
+	axs['e'].set_xticks([])
+	axs['e'].set_yticks([])
 	
 	# Calculate the tick locations for Low, and High
 	low_tick = 1
@@ -251,15 +352,15 @@ def make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local
 
 	# # Display the roundness clustered blob labels figure
 
-	im_roundness_cluster_labels = axs['e'].imshow(roundness_cluster_labels, alpha=ALPHA, cmap = 'brg')
+	im_roundness_cluster_labels = axs['f'].imshow(roundness_cluster_labels, alpha=ALPHA, cmap = 'brg')
 	# Add a colorbar
-	divider = make_axes_locatable(axs['e'])
+	divider = make_axes_locatable(axs['f'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_roundness_cluster_labels, cax=cax)
-	axs['e'].set_title(str(roundness_cluster_number) + ' nuclei groups by Roundness', pad = title_PAD)
+	axs['f'].set_title(str(roundness_cluster_number) + ' nuclei groups by Roundness', pad = title_PAD)
 	# Turn off axis ticks and labels
-	axs['e'].set_xticks([])
-	axs['e'].set_yticks([])
+	axs['f'].set_xticks([])
+	axs['f'].set_yticks([])
 
 	# Calculate the tick locations for Low and High
 	low_tick = 1
@@ -270,9 +371,6 @@ def make_plots(ModelSensitivity, modified_labels_rgb_image, detailed_info, Local
 	# cax.remove()
 
 	######################
-
-	# Remove the last subplot in the bottom row
-	# fig.delaxes(axs['f'])
 	
 	return fig
 

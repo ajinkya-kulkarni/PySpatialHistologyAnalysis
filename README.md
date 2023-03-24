@@ -10,6 +10,7 @@ This is primarily a [web application](https://pyspatialhistologyinformation.stre
 
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png)
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png)
+![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot3.png)
 
 #### Dependencies
 
