@@ -236,7 +236,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
 
 		# Add a markdown line break
-		st.markdown("")
+		
+		st.markdown("""---""")
 
 		##############################################################
 
