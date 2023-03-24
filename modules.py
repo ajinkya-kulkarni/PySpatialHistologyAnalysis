@@ -24,8 +24,8 @@ import streamlit as st
 
 from PIL import Image
 import numpy as np
-import cv2
 
+from skimage.filters import rank
 from skimage.measure import regionprops
 from sklearn.neighbors import KernelDensity
 
@@ -208,12 +208,20 @@ def mean_filter(labels):
 	grid_coords = np.vstack([x.ravel(), y.ravel()])
 
 	"""
-	# Calculate window size as 10% of the minimum dimension of the input array
+	# # Calculate window size as 10% of the minimum dimension of the input array
+	# window_size = int(0.1 * min(labels.shape[0], labels.shape[1]))
+
+	# # Apply a blur filter to the input array using the calculated window size
+	# # This effectively averages the pixel values in a local neighborhood around each pixel
+	# Local_Density = cv2.blur(labels, (window_size, window_size), cv2.BORDER_DEFAULT)
+
+	labels = labels.astype('uint8')
+
 	window_size = int(0.1 * min(labels.shape[0], labels.shape[1]))
 
-	# Apply a blur filter to the input array using the calculated window size
+	# Apply a mean filter to the input array using the calculated window size
 	# This effectively averages the pixel values in a local neighborhood around each pixel
-	Local_Density = cv2.blur(labels, (window_size, window_size), cv2.BORDER_DEFAULT)
+	Local_Density = rank.mean(labels, footprint = np.ones((window_size, window_size)))
 	
 	return Local_Density
 	
