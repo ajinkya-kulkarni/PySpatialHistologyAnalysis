@@ -63,7 +63,7 @@ st.set_page_config(
 ##########################################################################
 
 # Set the title of the web app
-st.title(':blue[Spatial analysis of H&E images using PySpatialHistologyAnalysis and StarDist]')
+st.title(':blue[Spatial analysis of H&E images]')
 
 st.caption('For more information, have a look at [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png) and [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/TestImage.jpeg). Source code available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis).', unsafe_allow_html = False)
 
