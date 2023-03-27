@@ -243,7 +243,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Add a markdown line break
 		
-		st.markdown("""---""")
+		st.markdown("")
 
 		##############################################################
 
