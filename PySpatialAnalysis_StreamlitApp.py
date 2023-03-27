@@ -27,6 +27,12 @@ from io import BytesIO
 from skimage import measure
 import pandas as pd
 
+import networkx as nx
+
+from matplotlib.lines import Line2D
+from matplotlib.colors import ListedColormap
+import matplotlib
+
 import time
 
 import matplotlib.pyplot as plt
@@ -143,7 +149,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Perform instance segmentation analysis on the RGB image to obtain the labels
 		# and detailed information about each label
-		labels, detailed_info = perform_analysis(rgb_image, ModelSensitivity)
+		labelled_image, detailed_info = perform_analysis(rgb_image, ModelSensitivity)
 
 		time.sleep(ProgressBarTime)
 		ProgressBar.progress(float(2/7))
@@ -152,7 +158,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Make RGB image from labels image
 
-		modified_labels_rgb_image = colorize_labels(labels)
+		modified_labels_rgb_image = colorize_labels(labelled_image)
 
 		time.sleep(ProgressBarTime)
 		ProgressBar.progress(float(3/7))
@@ -160,9 +166,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 		##############################################################
 
 		# Check that each label is a unique integer
-		unique_labels = np.unique(labels)
+		unique_labels = np.unique(labelled_image)
 		num_labels = len(unique_labels) - 1  # subtract 1 to exclude the background label
-		if num_labels != labels.max():
+		if num_labels != labelled_image.max():
 			raise Exception('Each blob does not have a unique integer assigned to it.')
 
 		##############################################################
@@ -170,7 +176,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		# Compute the region properties for each label in the label image
 		# using a function called "measure.regionprops_table"
 		# The properties computed include area, centroid, label, and orientation
-		label_properties = measure.regionprops_table(labels, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
+		label_properties = measure.regionprops_table(labelled_image, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
 
 		# Create a Pandas DataFrame to store the region properties
 		dataframe = pd.DataFrame(label_properties)
@@ -189,7 +195,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		## Calculate local nuclei density
 
-		Local_Density_mean_filter = mean_filter(labels)
+		Local_Density_mean_filter = mean_filter(labelled_image)
 
 		Local_Density_mean_filter = normalize_density_maps(Local_Density_mean_filter)
 
@@ -198,7 +204,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		######
 
-		Local_Density_KDE = weighted_kde_density_map(labels, num_points = 1000)
+		Local_Density_KDE = weighted_kde_density_map(labelled_image, num_points = 1000)
 		
 		Local_Density_KDE = normalize_density_maps(Local_Density_KDE)
 
@@ -211,9 +217,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		label_list = list(dataframe['label'])
 
-		area_cluster_labels = bin_property_values(labels, list(dataframe['area']), area_cluster_number)
+		area_cluster_labels = bin_property_values(labelled_image, list(dataframe['area']), area_cluster_number)
 
-		roundness_cluster_labels = bin_property_values(labels, list(dataframe['Roundness']), roundness_cluster_number)
+		roundness_cluster_labels = bin_property_values(labelled_image, list(dataframe['Roundness']), roundness_cluster_number)
 
 		time.sleep(ProgressBarTime)
 		ProgressBar.progress(float(7/7))
@@ -254,6 +260,37 @@ with st.form(key = 'form1', clear_on_submit = True):
 		# result_figure.savefig(save_filename, bbox_inches='tight')
 		# # Close the figure
 		# plt.close(result_figure)
+
+		##################################################################
+
+		st.markdown("""---""")
+
+		st.markdown("Nuclei connectivity graph")
+
+		with st.spinner('Generating Nuclei connectivity graph...'):
+
+			# Call the make_graph function to get the graph and node labels
+			graph, labels = make_graph(labelled_image, distance_threshold = 50)
+
+			# Define node colors
+			unique_labels = np.unique(labels)
+			num_colors = len(unique_labels)
+			base_cmap = matplotlib.colormaps['tab10']
+			cmap = ListedColormap(base_cmap(np.linspace(0, 1, num_colors)))
+			node_colors = {label: cmap(i) for i, label in enumerate(unique_labels)}
+
+			# Create a figure and axis
+			fig, ax = plt.subplots()
+
+			# Draw the graph
+			pos = nx.get_node_attributes(graph, 'pos')
+			nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 10, ax=ax)
+			nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 1, ax=ax)
+
+			# Add the labels image with transparency
+			plt.imshow(rgb_image, alpha=0.5)
+
+		st.pyplot(fig)
 
 		##################################################################
 

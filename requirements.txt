@@ -7,3 +7,5 @@ pandas
 matplotlib
 scikit-image
 scikit-learn
+scipy
+networkx

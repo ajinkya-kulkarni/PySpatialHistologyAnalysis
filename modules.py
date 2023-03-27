@@ -22,25 +22,14 @@
 
 import streamlit as st
 
-from PIL import Image
 import numpy as np
-
-from skimage.filters import rank
-from skimage.measure import regionprops
-from sklearn.neighbors import KernelDensity
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from contextlib import redirect_stdout
-
-from stardist.models import StarDist2D
-from csbdeep.utils import normalize
-
 ##########################################################################
+
+from PIL import Image
 
 def read_image(filename):
 	"""
@@ -62,6 +51,10 @@ def read_image(filename):
 	return rgb_image
 
 ##########################################################################
+
+from contextlib import redirect_stdout
+from stardist.models import StarDist2D
+from csbdeep.utils import normalize
 
 @st.cache_data
 def perform_analysis(rgb_image, threshold_probability):
@@ -133,6 +126,9 @@ def colorize_labels(labels):
 
 ##########################################################################
 
+from skimage.measure import regionprops
+from sklearn.neighbors import KernelDensity
+
 def weighted_kde_density_map(nucleus_mask, bandwidth='auto', kernel='gaussian', num_points = 500):
 	"""
 	Compute the weighted kernel density estimate (KDE) of the centroids of regions in a binary image.
@@ -187,6 +183,8 @@ def weighted_kde_density_map(nucleus_mask, bandwidth='auto', kernel='gaussian', 
 	return density_map
 
 ##########################################################################
+
+from skimage.filters import rank
 
 def mean_filter(labels):
 	"""
@@ -261,6 +259,63 @@ def bin_property_values(labels, property_values, n_bins):
 	return binned_values
 
 ##########################################################################
+
+from skimage import measure
+from scipy.spatial import distance_matrix
+import networkx as nx
+
+def make_graph(labelled_image, distance_threshold):
+
+	# Extract properties of the nuclei
+	properties = measure.regionprops_table(labelled_image, properties=['label', 'centroid'])
+	nuclei_centroids = np.column_stack([properties['centroid-1'], properties['centroid-0']])
+	num_nuclei = len(nuclei_centroids)
+
+	# Calculate the distance matrix between the nuclei centroids
+	distances = distance_matrix(nuclei_centroids, nuclei_centroids)
+
+	# Create an empty graph
+	graph = nx.Graph()
+
+	# Add nodes to the graph
+	for idx, centroid in enumerate(nuclei_centroids):
+		graph.add_node(idx, pos=centroid)
+
+	# Add edges to the graph based on connectivity density
+	for i in range(num_nuclei):
+		for j in range(i + 1, num_nuclei):
+			if distances[i, j] <= distance_threshold:
+				# Compute connectivity density between the nuclei
+				connectivity_density = 2 / (distances[i, j] ** 2)
+				# Add edge with weight equal to connectivity density
+				graph.add_edge(i, j, weight=connectivity_density)
+
+	# Cluster the nodes based on their connectivity density
+	node_labels = np.zeros(num_nuclei, dtype=int)
+	label_count = 0
+	for node in graph.nodes():
+		# Get the neighbors of the node
+		neighbors = list(graph.neighbors(node))
+		# Sort the neighbors by their connectivity density
+		neighbors_sorted = sorted(neighbors, key=lambda n: graph.edges[(node, n)]['weight'], reverse=True)
+		# Assign the same label to the node and its top-connected neighbors
+		if node_labels[node] == 0:
+			label_count += 1
+			node_labels[node] = label_count
+			for neighbor in neighbors_sorted:
+				if node_labels[neighbor] == 0:
+					node_labels[neighbor] = label_count
+
+	# Add the node labels as a node attribute to the graph
+	for node in graph.nodes():
+		graph.nodes[node]['label'] = node_labels[node]
+
+	return graph, node_labels
+
+##########################################################################
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
