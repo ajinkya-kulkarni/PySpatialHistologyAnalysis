@@ -264,7 +264,7 @@ from skimage import measure
 from scipy.spatial import distance_matrix
 import networkx as nx
 
-def make_graph(labelled_image, distance_threshold):
+def make_network_connectivity_graph(labelled_image, distance_threshold):
 	"""
 	This function creates a graph representation of a labelled image, where the nodes of the graph correspond to the nuclei in the image.
 	Edges are added between nodes based on a distance threshold, and the weight of each edge is equal to the connectivity density between the corresponding nuclei. The nodes are then clustered based on their connectivity density, and each cluster is assigned a unique label.
@@ -278,7 +278,7 @@ def make_graph(labelled_image, distance_threshold):
 	graph: a NetworkX graph object representing the nuclei in the image and their connectivity.
 	node_labels: a 1D numpy array containing the cluster labels assigned to each nucleus in the image.
 	"""
-	
+
 	# Extract properties of the nuclei
 	properties = measure.regionprops_table(labelled_image, properties=['label', 'centroid'])
 	nuclei_centroids = np.column_stack([properties['centroid-1'], properties['centroid-0']])

@@ -270,7 +270,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		with st.spinner('Generating Nuclei connectivity graph...'):
 
 			# Call the make_graph function to get the graph and node labels
-			graph, labels = make_graph(labelled_image, distance_threshold = 50)
+			graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold = 50)
 
 			# Define node colors
 			unique_labels = np.unique(labels)
