@@ -275,7 +275,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 			# Define node colors
 			unique_labels = np.unique(labels)
 			num_colors = len(unique_labels)
-			base_cmap = matplotlib.colormaps['tab10']
+			base_cmap = matplotlib.colormaps['Set1']
 			cmap = ListedColormap(base_cmap(np.linspace(0, 1, num_colors)))
 			node_colors = {label: cmap(i) for i, label in enumerate(unique_labels)}
 
@@ -284,7 +284,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 			# Draw the graph
 			pos = nx.get_node_attributes(graph, 'pos')
-			nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 10, ax=ax)
+			nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 5, ax=ax)
 			nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 1, ax=ax)
 
 			# Add the labels image with transparency
