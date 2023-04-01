@@ -361,9 +361,11 @@ def voronoi_tessellation(labelled_image):
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1, constrained_layout = True):
 
-	fig, axs = plt.subplot_mosaic([['a', 'b'], ['c', 'd'], ['e', 'f']], figsize=(20, 30), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
+	fig, axs = plt.subplot_mosaic([['a', 'b'], ['c', 'd'], ['e', 'f']], figsize=(20, 30), layout="constrained", dpi = DPI)
+
+	# fig, axs = plt.subplot_mosaic([['a', 'b'], ['c', 'd'], ['e', 'f']], figsize=(20, 30), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
 
 	## Display RGB labelled image
 

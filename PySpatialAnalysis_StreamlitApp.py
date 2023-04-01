@@ -243,9 +243,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
 
-		# Add a markdown line break
-		
-		st.markdown("")
+		st.markdown("""---""")
 
 		##############################################################
 
@@ -277,6 +275,32 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		st.markdown("""---""")
 
+		st.markdown("Voronoi Tesselation, indicating Nuclei packing")
+
+		fig, ax = plt.subplots()
+
+		# Add the labels image with transparency
+		plt.imshow(rgb_image, alpha = 0.5)
+
+		# Find the limits of the image
+		ymax, xmax = labelled_image.shape
+
+		# Plot the Voronoi diagram
+		voronoi_plot_2d(vor, ax=ax, show_vertices = False, line_colors = 'k', show_points = False, line_width = 0.5)
+
+		# Set the limits of the plot to match the original image
+		ax.set_xlim([0, xmax])
+		ax.set_ylim([0, ymax])
+
+		ax.set_xticks([])
+		ax.set_yticks([])
+
+		st.pyplot(fig)
+		
+		##################################################################
+
+		st.markdown("""---""")
+
 		st.markdown("Nuclei connectivity graph, indicating similar spaced Nuclei clusters")
 
 		# Define node colors
@@ -299,32 +323,6 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		st.pyplot(fig)
 
-		##################################################################
-
-		st.markdown("""---""")
-
-		st.markdown("Voronoi Tesselation, indicating Nuclei packing")
-
-		fig, ax = plt.subplots()
-
-		# Add the labels image with transparency
-		plt.imshow(rgb_image, alpha = 0.8)
-
-		# Find the limits of the image
-		ymax, xmax = labelled_image.shape
-
-		# Plot the Voronoi diagram
-		voronoi_plot_2d(vor, ax=ax, show_vertices = False, line_colors = 'k', show_points = False, line_width = 0.5)
-
-		# Set the limits of the plot to match the original image
-		ax.set_xlim([0, xmax])
-		ax.set_ylim([0, ymax])
-
-		ax.set_xticks([])
-		ax.set_yticks([])
-
-		st.pyplot(fig)
-		
 		##################################################################
 
 		st.markdown("""---""")
