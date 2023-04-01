@@ -33,6 +33,8 @@ from matplotlib.lines import Line2D
 from matplotlib.colors import ListedColormap
 import matplotlib
 
+from scipy.spatial import voronoi_plot_2d
+
 import time
 
 import matplotlib.pyplot as plt
@@ -75,7 +77,7 @@ st.set_page_config(
 # Set the title of the web app
 st.title(':blue[Spatial analysis of H&E images]')
 
-st.caption('For more information, have a look at [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png) and [this screenshot](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/TestImage.jpeg). Source code available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis).', unsafe_allow_html = False)
+st.caption('Application screenshots available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png), [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png) and [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot3.png). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/TestImage.jpeg). Source code available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis).', unsafe_allow_html = False)
 
 # Add some vertical space between the title and the next section
 st.markdown("")
@@ -89,7 +91,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1000x1000 pixels]')
 
 	# Add a file uploader to allow the user to upload an image file
-	uploaded_file = st.file_uploader("Upload a file", type=["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files=False, label_visibility='collapsed')
+	uploaded_file = st.file_uploader("Upload a file", type = ["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
 
 	######################################################################
 
@@ -99,7 +101,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	with left_column:
 
-		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.5, step = 0.05, format = '%0.2f', label_visibility = "visible", key = '-SensitivityKey-')
+		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.5, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-SensitivityKey-')
 
 		ModelSensitivity = round(float(st.session_state['-SensitivityKey-']), 2)
 
@@ -263,35 +265,66 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		##################################################################
 
-		st.markdown("""---""")
-
-		st.markdown("Nuclei connectivity graph")
-
-		with st.spinner('Generating Nuclei connectivity graph...'):
+		with st.spinner('Generating Nuclei connectivity graphs...'):
 
 			# Call the make_graph function to get the graph and node labels
-			graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold = 50)
+			graph, labels = make_network_connectivity_graph(labelled_image)
 
-			# Define node colors
-			unique_labels = np.unique(labels)
-			num_colors = len(unique_labels)
-			base_cmap = matplotlib.colormaps['Set1']
-			cmap = ListedColormap(base_cmap(np.linspace(0, 1, num_colors)))
-			node_colors = {label: cmap(i) for i, label in enumerate(unique_labels)}
+			# Compute Voronoi tessellation of the labelled image
+			vor = voronoi_tessellation(labelled_image)
 
-			# Create a figure and axis
-			fig, ax = plt.subplots()
+		##################################################################
 
-			# Draw the graph
-			pos = nx.get_node_attributes(graph, 'pos')
-			nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 5, ax=ax)
-			nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 1, ax=ax)
+		st.markdown("""---""")
 
-			# Add the labels image with transparency
-			plt.imshow(rgb_image, alpha=0.5)
+		st.markdown("Nuclei connectivity graph, indicating similar spaced Nuclei clusters")
+
+		# Define node colors
+		unique_labels = np.unique(labels)
+		num_colors = len(unique_labels)
+		base_cmap = matplotlib.colormaps['Set1']
+		cmap = ListedColormap(base_cmap(np.linspace(0, 1, num_colors)))
+		node_colors = {label: cmap(i) for i, label in enumerate(unique_labels)}
+
+		# Create a figure and axis
+		fig, ax = plt.subplots()
+
+		# Draw the graph
+		pos = nx.get_node_attributes(graph, 'pos')
+		nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 5, ax=ax)
+		nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 1, ax=ax)
+
+		# Add the labels image with transparency
+		plt.imshow(rgb_image, alpha=0.5)
 
 		st.pyplot(fig)
 
+		##################################################################
+
+		st.markdown("""---""")
+
+		st.markdown("Voronoi Tesselation, indicating Nuclei packing")
+
+		fig, ax = plt.subplots()
+
+		# Add the labels image with transparency
+		plt.imshow(rgb_image, alpha = 0.8)
+
+		# Find the limits of the image
+		ymax, xmax = labelled_image.shape
+
+		# Plot the Voronoi diagram
+		voronoi_plot_2d(vor, ax=ax, show_vertices = False, line_colors = 'k', show_points = False, line_width = 0.5)
+
+		# Set the limits of the plot to match the original image
+		ax.set_xlim([0, xmax])
+		ax.set_ylim([0, ymax])
+
+		ax.set_xticks([])
+		ax.set_yticks([])
+
+		st.pyplot(fig)
+		
 		##################################################################
 
 		st.markdown("""---""")

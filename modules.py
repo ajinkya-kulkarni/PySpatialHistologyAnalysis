@@ -264,7 +264,7 @@ from skimage import measure
 from scipy.spatial import distance_matrix
 import networkx as nx
 
-def make_network_connectivity_graph(labelled_image, distance_threshold):
+def make_network_connectivity_graph(labelled_image, distance_threshold = 50):
 	"""
 	This function creates a graph representation of a labelled image, where the nodes of the graph correspond to the nuclei in the image.
 	Edges are added between nodes based on a distance threshold, and the weight of each edge is equal to the connectivity density between the corresponding nuclei. The nodes are then clustered based on their connectivity density, and each cluster is assigned a unique label.
@@ -324,6 +324,37 @@ def make_network_connectivity_graph(labelled_image, distance_threshold):
 		graph.nodes[node]['label'] = node_labels[node]
 
 	return graph, node_labels
+
+##########################################################################
+
+from scipy.spatial import Voronoi
+from skimage import measure
+from scipy.spatial import distance_matrix
+
+def voronoi_tessellation(labelled_image):
+	"""
+	This function takes a labelled image as input and returns the Voronoi tessellation of the centroids of the labelled regions, weighted by the area of the nuclei.
+
+	Inputs:
+	labelled_image: a 2D image where each pixel has a unique integer label indicating the object it belongs to.
+
+	Outputs:
+	Voronoi tessellation: a Voronoi object containing the polygons defining the Voronoi tessellation of the centroids of the labelled regions.
+	"""
+
+	# Extract properties of the labelled regions
+	properties = measure.regionprops_table(labelled_image, properties=['label', 'centroid', 'area'])
+	nuclei_centroids = np.column_stack([properties['centroid-1'], properties['centroid-0']])
+	nuclei_areas = properties['area']
+
+	# Calculate the distance matrix between the centroids, weighted by the area of the nuclei
+	area_mat = np.sqrt(np.meshgrid(nuclei_areas, nuclei_areas))
+	distances = distance_matrix(nuclei_centroids, nuclei_centroids) + area_mat[0] + area_mat[1]
+
+	# Calculate the Voronoi tessellation of the centroids
+	vor = Voronoi(nuclei_centroids, qhull_options='Qbb Qc Qz')
+
+	return vor
 
 ##########################################################################
 
