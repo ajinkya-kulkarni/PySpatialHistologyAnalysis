@@ -14,6 +14,7 @@ Spatial analysis is then performed on the detected nuclei, and finally a spreads
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png)
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png)
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot3.png)
+![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot4.png)
 
 #### Dependencies
 
