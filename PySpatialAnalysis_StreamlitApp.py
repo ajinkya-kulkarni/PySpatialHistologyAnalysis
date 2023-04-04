@@ -68,7 +68,7 @@ st.set_page_config(
 	menu_items={
 		'Get help': 'mailto:ajinkya.kulkarni@mpinat.mpg.de',
 		'Report a bug': 'mailto:ajinkya.kulkarni@mpinat.mpg.de',
-		'About': 'This is an application for demonstrating the PySpatialHistologyAnalysis package. Developed, tested, and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen'
+		'About': 'This is an application for demonstrating the PySpatialHistologyAnalysis package. Developed, tested, and maintained by Ajinkya Kulkarni: https://github.com/ajinkya-kulkarni at the MPI-NAT, Goettingen.'
 	}
 )
 
