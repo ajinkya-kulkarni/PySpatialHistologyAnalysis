@@ -149,9 +149,15 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		##########################################################
 
+		# Normalize staining
+
+		stain_normalized_rgb_image = normalize_staining(rgb_image)
+
+		##########################################################
+
 		# Perform instance segmentation analysis on the RGB image to obtain the labels
 		# and detailed information about each label
-		labelled_image, detailed_info = perform_analysis(rgb_image, ModelSensitivity)
+		labelled_image, detailed_info = perform_analysis(stain_normalized_rgb_image, ModelSensitivity)
 
 		time.sleep(ProgressBarTime)
 		ProgressBar.progress(float(2/7))
@@ -178,7 +184,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		# Compute the region properties for each label in the label image
 		# using a function called "measure.regionprops_table"
 		# The properties computed include area, centroid, label, and orientation
-		label_properties = measure.regionprops_table(labelled_image, intensity_image=rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
+		label_properties = measure.regionprops_table(labelled_image, intensity_image=stain_normalized_rgb_image, properties=('area', 'axis_major_length', 'axis_minor_length', 'centroid', 'label', 'orientation'))
 
 		# Create a Pandas DataFrame to store the region properties
 		dataframe = pd.DataFrame(label_properties)
@@ -237,11 +243,25 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		##############################################################
 
+		## Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
+		## using a function called "make_plots"
+
+		# result_figure = make_first_plot(rgb_image, stain_normalized_rgb_image)
+
+		# ## Display the figure using Streamlit's "st.pyplot" function
+		# st.pyplot(result_figure)
+
+		image_comparison(img1=rgb_image, img2=stain_normalized_rgb_image, label1="Uploaded image", label2="Stain normalized image")
+
+		st.markdown("""---""")
+
+		##############################################################
+
 		# Compare the uploaded RGB image with the modified label image
 		# using a function called "image_comparison"
 		# Set parameters for image width, in-memory display, and responsiveness
 
-		image_comparison(img1=rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
+		image_comparison(img1=stain_normalized_rgb_image, img2=modified_labels_rgb_image, label1="Uploaded image", label2="Segmented image")
 
 		st.markdown("""---""")
 
@@ -250,7 +270,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		## Generate visualizations of the uploaded RGB image and the results of the instance segmentation analysis
 		## using a function called "make_plots"
 
-		result_figure = make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
+		result_figure = make_second_plot(stain_normalized_rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number)
 
 		## Display the figure using Streamlit's "st.pyplot" function
 		st.pyplot(result_figure)
@@ -280,7 +300,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		fig, ax = plt.subplots()
 
 		# Add the labels image with transparency
-		plt.imshow(rgb_image, alpha = 0.5)
+		plt.imshow(stain_normalized_rgb_image, alpha = 0.5)
 
 		# Find the limits of the image
 		ymax, xmax = labelled_image.shape
@@ -319,7 +339,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 1, ax=ax)
 
 		# Add the labels image with transparency
-		plt.imshow(rgb_image, alpha=0.5)
+		plt.imshow(stain_normalized_rgb_image, alpha=0.5)
 
 		st.pyplot(fig)
 

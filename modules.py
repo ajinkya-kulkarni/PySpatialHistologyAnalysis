@@ -52,6 +52,60 @@ def read_image(filename):
 
 ##########################################################################
 
+def normalize_staining(img, Io=240, alpha=1, beta=0.15):
+	''' Normalize staining appearence of H&E stained images
+	Input:
+		img: RGB input image
+		Io: (optional) transmitted light intensity
+		alpha: (optional) percentile for transparent pixel detection
+		beta: (optional) threshold for transparent pixel detection
+		
+	Output:
+		Inorm: normalized image
+	'''
+	# define reference mixing matrix and maximum stain concentrations
+	HERef = np.array([[0.5626, 0.2159],
+					[0.7201, 0.8012],
+					[0.4062, 0.5581]])
+	maxCRef = np.array([1.9705, 1.0308])
+
+	# reshape image and convert to optical density
+	h, w, c = img.shape
+	img = img.reshape((-1,3))
+	OD = -np.log((img.astype(np.float)+1)/Io)
+
+	# remove transparent pixels
+	ODhat = OD[~np.any(OD<beta, axis=1)]
+
+	# compute eigenvectors and project onto plane
+	eigvals, eigvecs = np.linalg.eigh(np.cov(ODhat.T))
+	That = ODhat.dot(eigvecs[:,1:3])
+	phi = np.arctan2(That[:,1],That[:,0])
+	minPhi = np.percentile(phi, alpha)
+	maxPhi = np.percentile(phi, 100-alpha)
+	vMin = eigvecs[:,1:3].dot(np.array([(np.cos(minPhi), np.sin(minPhi))]).T)
+	vMax = eigvecs[:,1:3].dot(np.array([(np.cos(maxPhi), np.sin(maxPhi))]).T)
+	if vMin[0] > vMax[0]:
+		HE = np.array((vMin[:,0], vMax[:,0])).T
+	else:
+		HE = np.array((vMax[:,0], vMin[:,0])).T
+
+	# determine stain concentrations and normalize
+	Y = np.reshape(OD, (-1, 3)).T
+	C = np.linalg.lstsq(HE,Y, rcond=None)[0]
+	maxC = np.array([np.percentile(C[0,:], 99), np.percentile(C[1,:],99)])
+	tmp = np.divide(maxC,maxCRef)
+	C2 = np.divide(C,tmp[:, np.newaxis])
+
+	# recreate the image using reference mixing matrix
+	Inorm = np.multiply(Io, np.exp(-HERef.dot(C2)))
+	Inorm[Inorm>255] = 254
+	Inorm = np.reshape(Inorm.T, (h, w, 3)).astype(np.uint8)
+
+	return Inorm
+
+##########################################################################
+
 from contextlib import redirect_stdout
 from stardist.models import StarDist2D
 from csbdeep.utils import normalize
@@ -344,8 +398,11 @@ def voronoi_tessellation(labelled_image):
 
 	# Extract properties of the labelled regions
 	properties = measure.regionprops_table(labelled_image, properties=['label', 'centroid', 'area'])
+
 	nuclei_centroids = np.column_stack([properties['centroid-1'], properties['centroid-0']])
+
 	nuclei_areas = properties['area']
+
 
 	# Calculate the distance matrix between the centroids, weighted by the area of the nuclei
 	area_mat = np.sqrt(np.meshgrid(nuclei_areas, nuclei_areas))
@@ -361,7 +418,46 @@ def voronoi_tessellation(labelled_image):
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_first_plot(rgb_image, stain_normalized_rgb_image, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+
+	fig, axs = plt.subplot_mosaic([['a', 'b']], figsize=(20, 30), layout="constrained", dpi = DPI, gridspec_kw={'hspace': 0, 'wspace': 0.2})
+
+	## Display RGB labelled image
+
+	im = axs['a'].imshow(rgb_image)
+	# Add a colorbar
+	divider = make_axes_locatable(axs['a'])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im, cax=cax)
+	axs['a'].set_title('H&E Image', pad = title_PAD)
+	# Turn off axis ticks and labels
+	axs['a'].set_xticks([])
+	axs['a'].set_yticks([])
+	cax.remove()
+
+	######################
+
+	## Display RGB labelled image
+
+	im = axs['b'].imshow(stain_normalized_rgb_image)
+	# Add a colorbar
+	divider = make_axes_locatable(axs['b'])
+	cax = divider.append_axes("right", size=SIZE, pad=PAD)
+	cb = fig.colorbar(im, cax=cax)
+	axs['b'].set_title('Stain normalized H&E Image', pad = title_PAD)
+	# Turn off axis ticks and labels
+	axs['b'].set_xticks([])
+	axs['b'].set_yticks([])
+	cax.remove()
+
+	return fig
+
+##########################################################################
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+def make_second_plot(stain_normalized_rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 # 	fig, axs = plt.subplot_mosaic([['a', 'b'], ['c', 'd'], ['e', 'f']], figsize=(20, 30), layout="constrained", dpi = DPI)
 
@@ -369,7 +465,7 @@ def make_plots(rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_
 
 	## Display RGB labelled image
 
-	im = axs['a'].imshow(rgb_image)
+	im = axs['a'].imshow(stain_normalized_rgb_image)
 	# Add a colorbar
 	divider = make_axes_locatable(axs['a'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
