@@ -403,7 +403,6 @@ def voronoi_tessellation(labelled_image):
 
 	nuclei_areas = properties['area']
 
-
 	# Calculate the distance matrix between the centroids, weighted by the area of the nuclei
 	area_mat = np.sqrt(np.meshgrid(nuclei_areas, nuclei_areas))
 	distances = distance_matrix(nuclei_centroids, nuclei_centroids) + area_mat[0] + area_mat[1]
@@ -457,7 +456,7 @@ def make_first_plot(rgb_image, stain_normalized_rgb_image, SIZE = "3%", PAD = 0.
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-def make_second_plot(stain_normalized_rgb_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
+def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_rgb_image, detailed_info, Local_Density_mean_filter, Local_Density_KDE, area_cluster_labels, area_cluster_number, roundness_cluster_labels, roundness_cluster_number, SIZE = "3%", PAD = 0.2, title_PAD = 15, DPI = 300, ALPHA = 1):
 
 # 	fig, axs = plt.subplot_mosaic([['a', 'b'], ['c', 'd'], ['e', 'f']], figsize=(20, 30), layout="constrained", dpi = DPI)
 
@@ -465,7 +464,7 @@ def make_second_plot(stain_normalized_rgb_image, ModelSensitivity, modified_labe
 
 	## Display RGB labelled image
 
-	im = axs['a'].imshow(stain_normalized_rgb_image)
+	im = axs['a'].imshow(perform_analysis_image)
 	# Add a colorbar
 	divider = make_axes_locatable(axs['a'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
