@@ -134,8 +134,6 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	if submitted:
 
-		st.markdown("")
-
 		ProgressBarText = st.empty()
 		ProgressBarText.caption("Analyzing uploaded image...")
 		ProgressBar = st.progress(0)
