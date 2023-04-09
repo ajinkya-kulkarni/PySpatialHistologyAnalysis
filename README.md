@@ -23,12 +23,7 @@ The app is built using the Streamlit framework and requires the dependencies as 
 
 #### Using the app
 
-To run the app, navigate to the directory containing the code and run the following command:
-`streamlit run PySpatialAnalysis_StreamlitApp.py`
-
-Upon running the command, the app will open in your browser at `localhost:8501`.
-
-To use the app, simply upload an H&E image using the file upload widget and click the "Analyze" button. The app will then perform object detection on the image using the StarDist2D model and display the results alongside the original image.
+To use the app, simply upload an H&E image using the file upload widget and click the "Analyze" button. The app will then perform object detection on the image using the [StarDist2D](https://github.com/stardist/stardist) model and display the results alongside the original image.
 If an error occurs during image analysis, an error message will be displayed.
 Note that the app works best for images smaller than 1000x1000 pixels.
 
