@@ -290,7 +290,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 		with st.spinner('Generating Nuclei connectivity graphs...'):
 
 			# Call the make_graph function to get the graph and node labels
-			graph, labels = make_network_connectivity_graph(labelled_image)
+
+			distance_threshold = 50
+			graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold)
 
 			# Compute Voronoi tessellation of the labelled image
 			vor = voronoi_tessellation(labelled_image)
@@ -304,7 +306,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		fig, ax = plt.subplots()
 
 		# Add the labels image with transparency
-		plt.imshow(perform_analysis_image, alpha = 0.5)
+		plt.imshow(np.flipud(perform_analysis_image), alpha = 0.5)
 
 		# Find the limits of the image
 		ymax, xmax = labelled_image.shape
@@ -339,8 +341,8 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Draw the graph
 		pos = nx.get_node_attributes(graph, 'pos')
-		nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 5, ax=ax)
-		nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 1, ax=ax)
+		nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 3, ax=ax)
+		nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 0.2, ax=ax)
 
 		# Add the labels image with transparency
 		plt.imshow(perform_analysis_image, alpha=0.5)

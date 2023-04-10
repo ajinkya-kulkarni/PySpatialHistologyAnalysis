@@ -318,7 +318,7 @@ from skimage import measure
 from scipy.spatial import distance_matrix
 import networkx as nx
 
-def make_network_connectivity_graph(labelled_image, distance_threshold = 50):
+def make_network_connectivity_graph(labelled_image, distance_threshold):
 	"""
 	This function creates a graph representation of a labelled image, where the nodes of the graph correspond to the nuclei in the image.
 	Edges are added between nodes based on a distance threshold, and the weight of each edge is equal to the connectivity density between the corresponding nuclei. The nodes are then clustered based on their connectivity density, and each cluster is assigned a unique label.
@@ -395,6 +395,8 @@ def voronoi_tessellation(labelled_image):
 	Outputs:
 	Voronoi tessellation: a Voronoi object containing the polygons defining the Voronoi tessellation of the centroids of the labelled regions.
 	"""
+
+	labelled_image = np.flipud(labelled_image)
 
 	# Extract properties of the labelled regions
 	properties = measure.regionprops_table(labelled_image, properties=['label', 'centroid', 'area'])
