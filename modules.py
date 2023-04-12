@@ -318,6 +318,74 @@ from skimage import measure
 from scipy.spatial import distance_matrix
 import networkx as nx
 
+def make_weighted_network_connectivity_graph(labelled_image, distance_threshold):
+    """
+    This function creates a graph representation of a labelled image, where the nodes of the graph correspond to the nuclei in the image.
+    Edges are added between nodes based on a distance threshold, and the weight of each edge is equal to the area-weighted connectivity density between the corresponding nuclei. The nodes are then clustered based on their connectivity density, and each cluster is assigned a unique label.
+
+    Inputs:
+
+    labelled_image: a 2D image where each pixel has a unique integer label indicating the nucleus it belongs to.
+    distance_threshold: a threshold value for the maximum distance between two nuclei centroids for them to be considered connected.
+    Outputs:
+
+    graph: a NetworkX graph object representing the nuclei in the image and their connectivity.
+    node_labels: a 1D numpy array containing the cluster labels assigned to each nucleus in the image.
+    """
+
+    # Extract properties of the nuclei
+    properties = measure.regionprops_table(labelled_image, properties=['label', 'centroid', 'area'])
+    nuclei_centroids = np.column_stack([properties['centroid-1'], properties['centroid-0']])
+    nuclei_areas = properties['area']
+    num_nuclei = len(nuclei_centroids)
+
+    # Calculate the distance matrix between the nuclei centroids
+    distances = distance_matrix(nuclei_centroids, nuclei_centroids)
+
+    # Create an empty graph
+    graph = nx.Graph()
+
+    # Add nodes to the graph
+    for idx, centroid in enumerate(nuclei_centroids):
+        graph.add_node(idx, pos=centroid, area=nuclei_areas[idx])
+
+    # Add edges to the graph based on connectivity density
+    for i in range(num_nuclei):
+        for j in range(i + 1, num_nuclei):
+            if distances[i, j] <= distance_threshold:
+                # Compute area-weighted connectivity density between the nuclei
+                connectivity_density = (2 / (distances[i, j] ** 2)) * (nuclei_areas[i] * nuclei_areas[j])
+                # Add edge with weight equal to area-weighted connectivity density
+                graph.add_edge(i, j, weight=connectivity_density)
+
+    # Cluster the nodes based on their connectivity density
+    node_labels = np.zeros(num_nuclei, dtype=int)
+    label_count = 0
+    for node in graph.nodes():
+        # Get the neighbors of the node
+        neighbors = list(graph.neighbors(node))
+        # Sort the neighbors by their connectivity density
+        neighbors_sorted = sorted(neighbors, key=lambda n: graph.edges[(node, n)]['weight'], reverse=True)
+        # Assign the same label to the node and its top-connected neighbors
+        if node_labels[node] == 0:
+            label_count += 1
+            node_labels[node] = label_count
+            for neighbor in neighbors_sorted:
+                if node_labels[neighbor] == 0:
+                    node_labels[neighbor] = label_count
+
+    # Add the node labels as a node attribute to the graph
+    for node in graph.nodes():
+        graph.nodes[node]['label'] = node_labels[node]
+
+    return graph, node_labels
+
+##########################################################################
+
+from skimage import measure
+from scipy.spatial import distance_matrix
+import networkx as nx
+
 def make_network_connectivity_graph(labelled_image, distance_threshold):
 	"""
 	This function creates a graph representation of a labelled image, where the nodes of the graph correspond to the nuclei in the image.

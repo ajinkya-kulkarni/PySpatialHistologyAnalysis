@@ -292,7 +292,9 @@ with st.form(key = 'form1', clear_on_submit = True):
 			# Call the make_graph function to get the graph and node labels
 
 			distance_threshold = 50
-			graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold)
+			
+			graph, labels = make_weighted_network_connectivity_graph(labelled_image, distance_threshold)
+			# graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold)
 
 			# Compute Voronoi tessellation of the labelled image
 			vor = voronoi_tessellation(labelled_image)
