@@ -129,7 +129,7 @@ def perform_analysis(rgb_image, threshold_probability):
 
 			# number_of_tiles = model._guess_n_tiles(rgb_image)
 
-			labels, detailed_info = model.predict_instances(normalize(rgb_image), n_tiles = (10, 10, 1),prob_thresh = threshold_probability, nms_thresh = 0.3, show_tile_progress = False)
+			labels, detailed_info = model.predict_instances(normalize(rgb_image), n_tiles = (10, 10, 1), prob_thresh = threshold_probability, nms_thresh = 0.3, show_tile_progress = False)
 
 	except:
 
@@ -183,7 +183,7 @@ def colorize_labels(labels):
 from skimage.measure import regionprops
 from sklearn.neighbors import KernelDensity
 
-def weighted_kde_density_map(nucleus_mask, bandwidth='auto', kernel='gaussian', num_points = 500):
+def weighted_kde_density_map(nucleus_mask, bandwidth = 'auto', kernel = 'gaussian', num_points = 1000):
 	"""
 	Compute the weighted kernel density estimate (KDE) of the centroids of regions in a binary image.
 	
@@ -564,7 +564,7 @@ def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_r
 
 	# Display the density map figure
 
-	im_density = axs['c'].imshow(Local_Density_mean_filter, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='cividis')
+	im_density = axs['c'].imshow(Local_Density_mean_filter, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='magma')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['c'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -584,7 +584,7 @@ def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_r
 
 	# Display the density map figure
 
-	im_density = axs['d'].imshow(Local_Density_KDE, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='cividis')
+	im_density = axs['d'].imshow(Local_Density_KDE, vmin = 0, vmax = 1, alpha=ALPHA, zorder = 2, cmap='magma')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['d'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -604,7 +604,7 @@ def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_r
 
 	# # Display the area clustered blob labels figure
 
-	im_area_cluster_labels = axs['e'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'brg')
+	im_area_cluster_labels = axs['e'].imshow(area_cluster_labels, alpha=ALPHA, cmap = 'rainbow')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['e'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
@@ -626,7 +626,7 @@ def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_r
 
 	# # Display the roundness clustered blob labels figure
 
-	im_roundness_cluster_labels = axs['f'].imshow(roundness_cluster_labels, alpha=ALPHA, cmap = 'brg')
+	im_roundness_cluster_labels = axs['f'].imshow(roundness_cluster_labels, alpha=ALPHA, cmap = 'rainbow')
 	# Add a colorbar
 	divider = make_axes_locatable(axs['f'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)

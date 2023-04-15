@@ -101,19 +101,19 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	with left_column:
 
-		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.5, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-SensitivityKey-')
+		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.3, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-SensitivityKey-')
 
 		ModelSensitivity = round(float(st.session_state['-SensitivityKey-']), 2)
 
 	with middle_column:
 
-		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
+		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 4, step = 1, format = '%d')
 
 		area_cluster_number = int(st.session_state['-n_clusters_area_key-'])
 
 	with right_column:
 
-		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_roundness_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
+		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_roundness_key-', min_value = 1, max_value = 10, value = 4, step = 1, format = '%d')
 
 		roundness_cluster_number= int(st.session_state['-n_clusters_roundness_key-'])
 
@@ -286,18 +286,16 @@ with st.form(key = 'form1', clear_on_submit = True):
 		# plt.close(result_figure)
 
 		##################################################################
+		
+		# Call the make_graph function to get the graph and node labels
 
-		with st.spinner('Generating Nuclei connectivity graphs...'):
+		distance_threshold = 50
+		
+		graph, labels = make_weighted_network_connectivity_graph(labelled_image, distance_threshold)
+		# graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold)
 
-			# Call the make_graph function to get the graph and node labels
-
-			distance_threshold = 50
-			
-			graph, labels = make_weighted_network_connectivity_graph(labelled_image, distance_threshold)
-			# graph, labels = make_network_connectivity_graph(labelled_image, distance_threshold)
-
-			# Compute Voronoi tessellation of the labelled image
-			vor = voronoi_tessellation(labelled_image)
+		# Compute Voronoi tessellation of the labelled image
+		vor = voronoi_tessellation(labelled_image)
 
 		##################################################################
 
@@ -343,7 +341,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Draw the graph
 		pos = nx.get_node_attributes(graph, 'pos')
-		nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 3, ax=ax)
+		nx.draw_networkx_nodes(graph, pos, node_color=[node_colors[label] for label in labels], node_size = 2, ax = ax)
 		nx.draw_networkx_edges(graph, pos, edge_color='gray', width = 0.2, ax=ax)
 
 		# Add the labels image with transparency
