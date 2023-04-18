@@ -11,7 +11,7 @@
 This is primarily a [web application](https://pyspatialhistologyinformation.streamlit.app/) for analyzing H&E images using the PySpatialHistologyAnalysis package, which utilizes the [StarDist](https://github.com/stardist/stardist) packages under it's hood. 
 The application allows the user to upload an H&E image. It first stain normalizes the image and then performs object (nuclei) detection on the image using the [StarDist2D](https://github.com/stardist/stardist) model. 
 The detected objects are then highlighted and displayed alongside the original image. 
-Spatial analysis is then performed on the detected nuclei, and finally a spreadsheet of all the results is prepared.
+Spatial analysis is then performed on the detected nuclei, and finally a spreadsheet of all the results is displayed.
 
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png)
 ![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png)
