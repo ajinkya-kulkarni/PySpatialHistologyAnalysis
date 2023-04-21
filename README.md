@@ -6,6 +6,8 @@
 
 ## Demonstrating PySpatialHistologyAnalysis using [StarDist](https://github.com/stardist/stardist)
 
+![](https://i.imgur.com/YiFgVlK.jpg)
+
 #### App Overview
 
 This is primarily a [web application](https://pyspatialhistologyinformation.streamlit.app/) for analyzing H&E images using the PySpatialHistologyAnalysis package, which utilizes the [StarDist](https://github.com/stardist/stardist) packages under it's hood. 
@@ -13,16 +15,16 @@ The application allows the user to upload an H&E image. It first stain normalize
 The detected objects are then highlighted and displayed alongside the original image. 
 Spatial analysis is then performed on the detected nuclei, and finally a spreadsheet of all the results is displayed.
 
-![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png)
-![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png)
-![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot3.png)
-![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot4.png)
-
 #### Dependencies
 
 The app is built using the Streamlit framework and requires the dependencies as mentioned in the `requirements.txt` file.
 
 #### Using the app
+
+![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot1.png)
+![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot2.png)
+![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot3.png)
+![App Screenshots](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/screenshot4.png)
 
 To use the app, simply upload an H&E image using the file upload widget and click the "Analyze" button. The app will then perform object detection on the image using the [StarDist2D](https://github.com/stardist/stardist) model and display the results alongside the original image.
 If an error occurs during image analysis, an error message will be displayed.
