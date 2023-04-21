@@ -1,11 +1,11 @@
 streamlit
 numpy
-tensorflow-cpu
 Pillow
-stardist
 pandas
 matplotlib
 scikit-image
 scikit-learn
 scipy
 networkx
+tensorflow-cpu
+stardist
