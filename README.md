@@ -4,7 +4,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ajinkya-kulkarni/PySpatialHistologyAnalysis)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ajinkya-kulkarni/PySpatialHistologyAnalysis)
 
-## Demonstrating PySpatialHistologyAnalysis using [StarDist](https://github.com/stardist/stardist)
+## Demonstrating PySpatialHistologyAnalysis
 
 ![](https://i.imgur.com/YiFgVlK.jpg)
 
