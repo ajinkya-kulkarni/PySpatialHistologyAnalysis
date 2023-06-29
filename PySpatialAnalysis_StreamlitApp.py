@@ -52,6 +52,10 @@ from modules import *
 
 ##########################################################################
 
+allowed_image_size = 1600 # Only images with sizes less than 1600x1600 allowed
+
+##########################################################################
+
 # Open the logo file in binary mode and read its contents into memory
 with open("logo.jpg", "rb") as f:
 	image_data = f.read()
@@ -141,6 +145,10 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		# Read in the RGB image from an uploaded file
 		rgb_image = read_image(uploaded_file)
+
+		if rgb_image.shape[0] > allowed_image_size or rgb_image.shape[1] > allowed_image_size:
+			st.error('Uploaded image exceeds the allowed image size. Please reduce the image size.')
+			st.stop()
 
 		time.sleep(ProgressBarTime)
 		ProgressBar.progress(float(1/7))
