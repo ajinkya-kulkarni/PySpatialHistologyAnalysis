@@ -72,7 +72,7 @@ def normalize_staining(img, Io=240, alpha=1, beta=0.15):
 	# reshape image and convert to optical density
 	h, w, c = img.shape
 	img = img.reshape((-1,3))
-	OD = -np.log((img.astype(np.float)+1)/Io)
+	OD = -np.log((img.astype(np.float64)+1)/Io)
 
 	# remove transparent pixels
 	ODhat = OD[~np.any(OD<beta, axis=1)]
@@ -303,7 +303,7 @@ def bin_property_values(labels, property_values, n_bins):
 	hist, bins = np.histogram(property_values, bins=n_bins)
 	
 	# Create an array to store the binned values
-	binned_values = np.zeros_like(labels, dtype=float)
+	binned_values = np.zeros_like(labels, dtype=np.float64)
 	binned_values.fill(np.nan)
 	
 	# Assign the binned values to each label
