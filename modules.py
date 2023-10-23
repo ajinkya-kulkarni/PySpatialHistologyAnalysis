@@ -129,7 +129,7 @@ def perform_analysis(rgb_image, threshold_probability):
 
 			# number_of_tiles = model._guess_n_tiles(rgb_image)
 
-			labels, detailed_info = model.predict_instances(normalize(rgb_image), n_tiles = (10, 10, 1), prob_thresh = threshold_probability, nms_thresh = 0.3, show_tile_progress = False)
+			labels, detailed_info = model.predict_instances(normalize(rgb_image), n_tiles = (4, 4, 1), prob_thresh = threshold_probability, nms_thresh = 0.3, show_tile_progress = False)
 
 	except:
 
@@ -183,7 +183,7 @@ def colorize_labels(labels):
 from skimage.measure import regionprops
 from sklearn.neighbors import KernelDensity
 
-def weighted_kde_density_map(nucleus_mask, bandwidth = 'auto', kernel = 'gaussian', num_points = 1000):
+def weighted_kde_density_map(nucleus_mask, bandwidth = 'auto', kernel = 'gaussian', num_points = 2000):
 	"""
 	Compute the weighted kernel density estimate (KDE) of the centroids of regions in a binary image.
 	
@@ -238,9 +238,9 @@ def weighted_kde_density_map(nucleus_mask, bandwidth = 'auto', kernel = 'gaussia
 
 ##########################################################################
 
-from skimage.filters import rank
+import cv2
 
-def mean_filter(labels):
+def mean_filter(labels, size = 0.1):
 	"""
 	Calculates local density of an input array.
 	# Compute label areas
@@ -260,21 +260,18 @@ def mean_filter(labels):
 	grid_coords = np.vstack([x.ravel(), y.ravel()])
 
 	"""
-	# # Calculate window size as 10% of the minimum dimension of the input array
-	# window_size = int(0.1 * min(labels.shape[0], labels.shape[1]))
-
-	# # Apply a blur filter to the input array using the calculated window size
-	# # This effectively averages the pixel values in a local neighborhood around each pixel
-	# Local_Density = cv2.blur(labels, (window_size, window_size), cv2.BORDER_DEFAULT)
-
-	labels = labels.astype('uint8')
-
-	window_size = int(0.1 * min(labels.shape[0], labels.shape[1]))
-
-	# Apply a mean filter to the input array using the calculated window size
-	# This effectively averages the pixel values in a local neighborhood around each pixel
-	Local_Density = rank.mean(labels, footprint = np.ones((window_size, window_size)))
 	
+	binary_image = np.where(labels > 0, 255, 0).astype(np.uint8)
+
+	# Calculate window size as 10% of the minimum dimension of the input array
+	window_size = int(0.1 * min(binary_image.shape[0], binary_image.shape[1]))
+
+	# Ensure that window_size is a positive integer
+	window_size = max(1, window_size)
+
+	# Apply a mean filter to the grayscale image using the calculated window size
+	Local_Density = cv2.blur(binary_image, (window_size, window_size))
+
 	return Local_Density
 	
 ##########################################################################
@@ -569,7 +566,7 @@ def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_r
 	divider = make_axes_locatable(axs['c'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_density, cax=cax)
-	axs['c'].set_title('Nuclei density', pad = title_PAD)
+	axs['c'].set_title('Nuclei distribution', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['c'].set_xticks([])
 	axs['c'].set_yticks([])
@@ -589,7 +586,7 @@ def make_second_plot(perform_analysis_image, ModelSensitivity, modified_labels_r
 	divider = make_axes_locatable(axs['d'])
 	cax = divider.append_axes("right", size=SIZE, pad=PAD)
 	cb = fig.colorbar(im_density, cax=cax)
-	axs['d'].set_title('Nuclei packing', pad = title_PAD)
+	axs['d'].set_title('Nuclei density', pad = title_PAD)
 	# Turn off axis ticks and labels
 	axs['d'].set_xticks([])
 	axs['d'].set_yticks([])
