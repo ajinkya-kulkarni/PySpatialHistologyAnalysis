@@ -9,3 +9,4 @@ scipy
 networkx
 tensorflow-cpu
 stardist
+opencv-python-headless
