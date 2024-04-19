@@ -224,7 +224,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		######
 
-		Local_Density_KDE = weighted_kde_density_map(labelled_image, num_points = 100)
+		Local_Density_KDE = weighted_kde_density_map(labelled_image, num_points = 1000)
 		
 		Local_Density_KDE = normalize_density_maps(Local_Density_KDE)
 
