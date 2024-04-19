@@ -92,7 +92,7 @@ st.markdown("")
 with st.form(key = 'form1', clear_on_submit = True):
 
 	# Add some text explaining what the user should do next
-	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 1500x1500 pixels]')
+	st.markdown(':blue[Upload an H&E image/slide to be analyzed. Works best for images/slides smaller than 2000x2000 pixels]')
 
 	# Add a file uploader to allow the user to upload an image file
 	uploaded_file = st.file_uploader("Upload a file", type = ["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
