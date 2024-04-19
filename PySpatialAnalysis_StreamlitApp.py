@@ -52,7 +52,7 @@ from modules import *
 
 ##########################################################################
 
-allowed_image_size = 1600 # Only images with sizes less than 1600x1600 allowed
+allowed_image_size = 2000 # Only images with sizes less than 2000x2000 allowed
 
 ##########################################################################
 
@@ -105,19 +105,19 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 	with left_column:
 
-		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.3, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-SensitivityKey-')
+		st.slider('Threshold (σ) for Nuclei detection. Higher value detects lesser Nuclei.', min_value = 0.1, max_value = 0.9, value = 0.5, step = 0.1, format = '%0.1f', label_visibility = "visible", key = '-SensitivityKey-')
 
 		ModelSensitivity = round(float(st.session_state['-SensitivityKey-']), 2)
 
 	with middle_column:
 
-		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 4, step = 1, format = '%d')
+		st.number_input('Number of classes for Area, between 1 and 10.', key = '-n_clusters_area_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
 
 		area_cluster_number = int(st.session_state['-n_clusters_area_key-'])
 
 	with right_column:
 
-		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_roundness_key-', min_value = 1, max_value = 10, value = 4, step = 1, format = '%d')
+		st.number_input('Number of classes for Roundness, between 1 and 10.', key = '-n_clusters_roundness_key-', min_value = 1, max_value = 10, value = 3, step = 1, format = '%d')
 
 		roundness_cluster_number= int(st.session_state['-n_clusters_roundness_key-'])
 
@@ -224,7 +224,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 
 		######
 
-		Local_Density_KDE = weighted_kde_density_map(labelled_image, num_points = 1000)
+		Local_Density_KDE = weighted_kde_density_map(labelled_image, num_points = 100)
 		
 		Local_Density_KDE = normalize_density_maps(Local_Density_KDE)
 
