@@ -374,7 +374,7 @@ with st.form(key = 'form1', clear_on_submit = True):
 		
 		# Move the 'Label #' column to the beginning of the DataFrame
 		cols = list(renamed_dataframe.columns)
-		cols.pop(cols.index('Nucelus #'))
+		cols.pop(cols.index('Label #'))
 		renamed_dataframe = renamed_dataframe[['Label #'] + cols]
 
 		# Convert the 'Orientation' column from radians to degrees and shift by 90 degrees using the "apply" method
